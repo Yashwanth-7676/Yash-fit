@@ -27,6 +27,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { Card, StatCard, SectionHeading, Badge, Button } from '@/components/ui'
+import { RpgProgressCard } from '@/components/rpg/RpgProgressCard'
 import { createClient } from '@/lib/supabase/client'
 import { getUserProfile } from '@/lib/profileService'
 import type { UserProfile } from '@/types/profile'
@@ -523,6 +524,9 @@ export function DashboardContent() {
           </Link>
         </div>
       )}
+
+      {/* Anime Fitness RPG Hero Progression Card */}
+      <RpgProgressCard />
 
       {/* Stats row with live telemetry */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

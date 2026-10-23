@@ -27,6 +27,8 @@ import { Button, Card, Input, Badge, useToast } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
+import { awardXp, unlockAchievement } from '@/lib/rpg/rpgService'
+import { publishActivity } from '@/lib/social/socialService'
 import type { WorkoutRoutine, CompletedExerciseLog, CompletedSetLog, Exercise } from '@/types/workout'
 
 export function WorkoutSessionTracker() {
@@ -255,7 +257,22 @@ export function WorkoutSessionTracker() {
       existing.unshift(sessionPayload)
       localStorage.setItem('yashfit_completed_workouts', JSON.stringify(existing))
       sessionStorage.removeItem('yashfit_active_session_draft')
-      toast.success('Workout Complete! 🏆', `${selectedRoutine.name} finished with ${totalCompletedSets} sets lifted.`)
+
+      // Award Anime RPG Experience Points & Check Achievements
+      awardXp('workout', 150, `Completed ${selectedRoutine.name}`, `session-${Date.now()}`)
+      unlockAchievement('ach-first-blood')
+      if (existing.length >= 7) unlockAchievement('ach-iron-streak-7')
+      if (existing.length >= 3) unlockAchievement('ach-iron-streak-3')
+
+      // Share milestone to social community feed
+      publishActivity(
+        'workout_completed',
+        `Completed ${selectedRoutine.name}`,
+        `Finished session with ${totalCompletedSets} sets and ${totalVolume.toLocaleString()}kg total volume!`,
+        `${totalVolume.toLocaleString()} kg`
+      )
+
+      toast.success('Workout Complete! +150 XP 🏆', `${selectedRoutine.name} finished with ${totalCompletedSets} sets lifted.`)
     } catch {
       // ignore storage errors
     }
@@ -280,23 +297,29 @@ export function WorkoutSessionTracker() {
           </div>
 
           {/* Performance Summary Grid */}
-          <div className="grid grid-cols-3 gap-3 bg-zinc-950/70 border border-zinc-800 rounded-xl p-4 text-center">
+          <div className="grid grid-cols-4 gap-2 bg-zinc-950/70 border border-zinc-800 rounded-xl p-4 text-center">
             <div>
-              <span className="text-[11px] text-zinc-500 block uppercase">Time</span>
-              <span className="text-lg font-bold text-white mt-0.5 block">
+              <span className="text-[10px] text-zinc-500 block uppercase">Time</span>
+              <span className="text-base font-bold text-white mt-0.5 block">
                 {formatTime(elapsedSeconds)}
               </span>
             </div>
             <div>
-              <span className="text-[11px] text-zinc-500 block uppercase">Volume</span>
-              <span className="text-lg font-bold text-lime-400 mt-0.5 block">
-                {totalVolume.toLocaleString()} kg
+              <span className="text-[10px] text-zinc-500 block uppercase">Volume</span>
+              <span className="text-base font-bold text-lime-400 mt-0.5 block">
+                {totalVolume.toLocaleString()}kg
               </span>
             </div>
             <div>
-              <span className="text-[11px] text-zinc-500 block uppercase">Sets</span>
-              <span className="text-lg font-bold text-white mt-0.5 block">
+              <span className="text-[10px] text-zinc-500 block uppercase">Sets</span>
+              <span className="text-base font-bold text-white mt-0.5 block">
                 {totalCompletedSets}
+              </span>
+            </div>
+            <div>
+              <span className="text-[10px] text-zinc-500 block uppercase">RPG Gain</span>
+              <span className="text-base font-bold text-amber-400 mt-0.5 block">
+                +150 XP
               </span>
             </div>
           </div>

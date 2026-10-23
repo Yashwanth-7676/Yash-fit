@@ -18,8 +18,12 @@ import {
   Lightbulb,
   HeartPulse,
   Camera,
+  Users,
+  Target,
+  Award,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
+import { NotificationBell } from '@/components/social/NotificationBell'
 
 export interface NavItem {
   label: string
@@ -50,6 +54,22 @@ const navItems: NavItem[] = [
     href: '/form-analysis',
     icon: <Camera size={18} />,
     badge: 'AI',
+  },
+  {
+    label: 'Community',
+    href: '/community',
+    icon: <Users size={18} />,
+    badge: 'Social',
+  },
+  {
+    label: 'Quests',
+    href: '/quests',
+    icon: <Target size={18} />,
+  },
+  {
+    label: 'Achievements',
+    href: '/achievements',
+    icon: <Award size={18} />,
   },
   {
     label: 'Progress',
@@ -100,19 +120,22 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="flex items-center justify-between px-4 py-5 border-b border-zinc-800">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-800">
         <Link href="/dashboard" onClick={onClose} aria-label="YashFit Dashboard">
           <YashFitLogo />
         </Link>
-        {onClose && (
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors lg:hidden"
-            aria-label="Close navigation"
-          >
-            <X size={18} />
-          </button>
-        )}
+        <div className="flex items-center gap-1">
+          <NotificationBell />
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-md text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors lg:hidden"
+              aria-label="Close navigation"
+            >
+              <X size={18} />
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Nav items */}
@@ -226,7 +249,7 @@ export function MobileTopBar({ onMenuOpen }: MobileTopBarProps) {
       <Link href="/dashboard" aria-label="YashFit Dashboard">
         <YashFitLogo compact />
       </Link>
-      <div className="w-9" aria-hidden="true" />
+      <NotificationBell />
     </header>
   )
 }
