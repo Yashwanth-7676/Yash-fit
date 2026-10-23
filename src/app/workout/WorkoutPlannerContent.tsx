@@ -12,17 +12,23 @@ import {
   ChevronRight,
   RotateCcw,
   CheckCircle2,
+  PlayCircle,
+  X,
+  Video,
 } from 'lucide-react'
 import { Card, Badge, Button, SectionHeading } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES, getRecommendedRoutineForProfile } from '@/data/routines'
+import { EXERCISE_DATABASE } from '@/data/exercises'
+import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
 import { getUserProfile } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
-import type { WorkoutRoutine } from '@/types/workout'
+import type { WorkoutRoutine, Exercise } from '@/types/workout'
 import type { UserProfile } from '@/types/profile'
 
 export function WorkoutPlannerContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [selectedRoutine, setSelectedRoutine] = useState<WorkoutRoutine>(PRESET_WORKOUT_ROUTINES[0])
+  const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -154,6 +160,27 @@ export function WorkoutPlannerContent() {
                     <span className="text-zinc-500 block">Rest</span>
                     <span className="font-semibold text-zinc-300">{item.restSeconds}s</span>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const matched = EXERCISE_DATABASE.find((ex) => ex.id === item.exerciseId) || {
+                        id: item.exerciseId,
+                        name: item.exerciseName,
+                        primaryMuscle: item.primaryMuscle,
+                        equipment: item.equipment,
+                        difficulty: 'Intermediate' as const,
+                        instructions: ['Perform with strict control and full range of motion.'],
+                      }
+                      setPreviewExercise(matched)
+                    }}
+                    className="p-2 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-400 hover:text-lime-400 hover:border-lime-400/40 transition-colors flex items-center gap-1.5 text-xs font-medium cursor-pointer"
+                    title="Preview anime movement technique"
+                    aria-label={`Preview movement technique for ${item.exerciseName}`}
+                  >
+                    <PlayCircle size={15} className="text-lime-400" />
+                    <span className="hidden md:inline">Demo</span>
+                  </button>
                 </div>
               </div>
             ))}
@@ -169,6 +196,49 @@ export function WorkoutPlannerContent() {
           </Link>
         </div>
       </Card>
+
+      {/* Exercise Movement Preview Modal */}
+      {previewExercise && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4"
+          onClick={() => setPreviewExercise(null)}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-xl w-full p-5 space-y-4 shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="accent">{previewExercise.primaryMuscle}</Badge>
+                  <span className="text-xs text-zinc-500">{previewExercise.equipment}</span>
+                </div>
+                <h3 className="text-lg font-bold text-white">{previewExercise.name}</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPreviewExercise(null)}
+                className="p-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+                aria-label="Close modal"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Video Player */}
+            <ExerciseVideoPlayer
+              exercise={previewExercise}
+              autoPlay={true}
+            />
+
+            <div className="flex justify-end pt-2">
+              <Button size="sm" variant="outline" onClick={() => setPreviewExercise(null)}>
+                Close Preview
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

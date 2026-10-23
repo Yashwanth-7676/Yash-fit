@@ -17,11 +17,16 @@ import {
   Check,
   FastForward,
   TrendingUp,
+  Video,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { Button, Card, Input, Badge, useToast } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
-import type { WorkoutRoutine, CompletedExerciseLog, CompletedSetLog } from '@/types/workout'
+import { EXERCISE_DATABASE } from '@/data/exercises'
+import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
+import type { WorkoutRoutine, CompletedExerciseLog, CompletedSetLog, Exercise } from '@/types/workout'
 
 export function WorkoutSessionTracker() {
   const router = useRouter()
@@ -40,6 +45,9 @@ export function WorkoutSessionTracker() {
   const [restRemaining, setRestRemaining] = useState<number | null>(null)
   const [isResting, setIsResting] = useState(false)
   const [isRestPaused, setIsRestPaused] = useState(false)
+
+  // Demo viewer active state (does not disrupt active workout or rest countdown)
+  const [expandedDemoId, setExpandedDemoId] = useState<string | null>(null)
 
   // Session complete flag
   const [sessionFinished, setSessionFinished] = useState(false)
@@ -384,9 +392,20 @@ export function WorkoutSessionTracker() {
       <main className="max-w-4xl w-full mx-auto p-4 md:p-6 space-y-6 flex-1">
         {selectedRoutine.exercises.map((item, exIdx) => {
           const sets = exerciseLogs[item.exerciseId] || []
+          const isDemoExpanded = expandedDemoId === item.exerciseId
+          const matchedExercise: Exercise =
+            EXERCISE_DATABASE.find((ex) => ex.id === item.exerciseId) || {
+              id: item.exerciseId,
+              name: item.exerciseName,
+              primaryMuscle: item.primaryMuscle,
+              equipment: item.equipment,
+              difficulty: 'Intermediate',
+              instructions: ['Perform with strict control and full range of motion.'],
+            }
+
           return (
             <Card key={item.exerciseId} className="space-y-4 p-5 sm:p-6 border-zinc-800 bg-zinc-900">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between flex-wrap gap-2">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-xs font-bold text-lime-400">#{exIdx + 1}</span>
@@ -395,10 +414,43 @@ export function WorkoutSessionTracker() {
                   </div>
                   <h2 className="text-lg font-bold text-white">{item.exerciseName}</h2>
                 </div>
-                <div className="text-right text-xs text-zinc-400">
-                  Target: <span className="text-white font-medium">{item.targetReps} reps</span>
+
+                <div className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedDemoId(isDemoExpanded ? null : item.exerciseId)}
+                    className={`px-2.5 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      isDemoExpanded
+                        ? 'bg-lime-400 text-zinc-950 border-lime-400 shadow-sm'
+                        : 'bg-zinc-800 text-zinc-300 border-zinc-700 hover:border-lime-400/50 hover:text-white'
+                    }`}
+                    title="Toggle animated exercise technique demonstration"
+                  >
+                    <Video size={13} className={isDemoExpanded ? 'text-zinc-950' : 'text-lime-400'} />
+                    <span>{isDemoExpanded ? 'Hide Anime Demo' : 'Anime Demo'}</span>
+                    {isDemoExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                  </button>
+
+                  <div className="text-right text-xs text-zinc-400">
+                    Target: <span className="text-white font-medium">{item.targetReps} reps</span>
+                  </div>
                 </div>
               </div>
+
+              {/* Expandable Anime Technique Demonstration */}
+              {isDemoExpanded && (
+                <div className="p-3.5 rounded-xl bg-zinc-950 border border-zinc-800 space-y-2 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between text-xs text-zinc-400 px-1">
+                    <span className="font-semibold text-white">Technique Form Checker</span>
+                    <span>Rest timer &amp; sets stay active</span>
+                  </div>
+                  <ExerciseVideoPlayer
+                    exercise={matchedExercise}
+                    compact={true}
+                    autoPlay={true}
+                  />
+                </div>
+              )}
 
               {/* Set logging table */}
               <div className="space-y-2">

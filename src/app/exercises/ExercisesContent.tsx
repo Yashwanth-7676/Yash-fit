@@ -12,8 +12,11 @@ import {
   X,
   Star,
   Shuffle,
+  PlayCircle,
+  Video,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, SectionHeading, useToast } from '@/components/ui'
+import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import type { Exercise, MuscleGroup } from '@/types/workout'
 import type { EquipmentOption } from '@/types/profile'
@@ -280,9 +283,13 @@ export function ExercisesContent() {
               </div>
 
               <div className="pt-4 mt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-500">
-                <span>{exercise.instructions.length} steps cue</span>
-                <span className="flex items-center text-lime-400 font-medium group-hover:translate-x-0.5 transition-transform">
-                  View cues <ChevronRight size={14} />
+                <span className="flex items-center gap-1.5 text-zinc-400">
+                  <Video size={13} className="text-lime-400" />
+                  <span>Anime Demo</span>
+                </span>
+                <span className="flex items-center gap-1 text-lime-400 font-medium group-hover:translate-x-0.5 transition-transform">
+                  <PlayCircle size={14} />
+                  <span>Watch Demo</span>
                 </span>
               </div>
             </div>
@@ -307,31 +314,47 @@ export function ExercisesContent() {
         </Card>
       )}
 
-      {/* Exercise Detail Modal */}
+      {/* Exercise Detail Modal with Anime Video Player */}
       {activeExercise && (
         <div
-          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4 sm:p-6"
           onClick={() => setActiveExercise(null)}
         >
           <div
-            className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-xl w-full p-6 space-y-5 max-h-[90vh] overflow-y-auto shadow-2xl"
+            className="bg-zinc-900 border border-zinc-800 rounded-2xl max-w-2xl w-full p-5 sm:p-6 space-y-5 max-h-[92vh] overflow-y-auto shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between">
               <div>
-                <div className="flex items-center gap-2 mb-1.5">
+                <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                   <Badge variant="accent">{activeExercise.primaryMuscle}</Badge>
                   <Badge variant="default">{activeExercise.equipment}</Badge>
                   <span className="text-xs text-zinc-500">{activeExercise.difficulty}</span>
                 </div>
-                <h2 className="text-xl font-bold text-white">{activeExercise.name}</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-white">{activeExercise.name}</h2>
               </div>
               <button
                 onClick={() => setActiveExercise(null)}
-                className="p-1 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                className="p-1.5 rounded-lg text-zinc-500 hover:text-white hover:bg-zinc-800 transition-colors"
+                aria-label="Close dialog"
               >
                 <X size={20} />
               </button>
+            </div>
+
+            {/* Anime Animated Demonstration Video Player */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-semibold text-white flex items-center gap-1.5">
+                  <Video size={14} className="text-lime-400" />
+                  Technique Demonstration
+                </span>
+                <span className="text-zinc-500">60 FPS Cel Animation</span>
+              </div>
+              <ExerciseVideoPlayer
+                exercise={activeExercise}
+                autoPlay={true}
+              />
             </div>
 
             {/* Target Muscles */}
