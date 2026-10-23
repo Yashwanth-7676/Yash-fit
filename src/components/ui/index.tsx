@@ -402,3 +402,10 @@ export const Divider: React.FC<{ className?: string }> = ({ className = '' }) =>
   <hr className={`border-zinc-800 ${className}`} />
 )
 
+// ─── Modal & Toast ────────────────────────────────────────────────────────────
+
+export { Modal } from './Modal'
+export { ToastProvider, useToast } from './Toast'
+export type { ToastType, ToastMessage } from './Toast'
+
+

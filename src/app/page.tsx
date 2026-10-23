@@ -256,15 +256,23 @@ function DashboardPreview() {
             <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-4 mb-3" aria-hidden="true">
               <p className="text-xs text-zinc-500 mb-3 font-medium">Weekly Activity</p>
               <div className="flex items-end gap-2 h-16">
-                {[40, 70, 55, 90, 65, 80, 45].map((h, i) => (
+                {[
+                  { outer: 40, inner: 55 },
+                  { outer: 70, inner: 75 },
+                  { outer: 55, inner: 60 },
+                  { outer: 90, inner: 100 },
+                  { outer: 65, inner: 70 },
+                  { outer: 80, inner: 85 },
+                  { outer: 45, inner: 50 },
+                ].map((bar, i) => (
                   <div
                     key={i}
                     className="flex-1 rounded-sm bg-lime-400/20"
-                    style={{ height: `${h}%` }}
+                    style={{ height: `${bar.outer}%` }}
                   >
                     <div
                       className="w-full rounded-sm bg-lime-400"
-                      style={{ height: i === 3 ? '100%' : `${Math.random() * 60 + 20}%` }}
+                      style={{ height: `${bar.inner}%` }}
                     />
                   </div>
                 ))}
@@ -533,12 +541,12 @@ function Footer() {
                 { label: 'Dashboard', href: '/dashboard' },
               ].map((link) => (
                 <li key={link.label}>
-                  <a
+                  <Link
                     href={link.href}
                     className="text-sm text-zinc-500 hover:text-white transition-colors"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

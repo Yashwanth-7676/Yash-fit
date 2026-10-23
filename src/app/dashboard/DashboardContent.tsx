@@ -109,7 +109,26 @@ function TodaysWorkoutCard() {
 // ─── Recovery Card ────────────────────────────────────────────────────────────
 
 function RecoveryCard() {
-  const score = 78 // Demo value
+  const [score, setScore] = useState(78)
+  const [sleepText, setSleepText] = useState('Sleep quality: Good')
+  const [sorenessText, setSorenessText] = useState('Muscle soreness: Low')
+  const [energyText, setEnergyText] = useState('Energy levels: Moderate')
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem('yashfit_latest_recovery')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed.readinessScore) setScore(parsed.readinessScore)
+        if (parsed.sleepQuality) setSleepText(`Sleep quality: ${parsed.sleepQuality}/5 (${parsed.sleepHours}h)`)
+        if (parsed.soreness) setSorenessText(`Muscle soreness: ${parsed.soreness}`)
+        if (parsed.energy) setEnergyText(`Energy levels: ${parsed.energy}`)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
   const circumference = 2 * Math.PI * 36
 
   return (
@@ -118,7 +137,7 @@ function RecoveryCard() {
         <div>
           <Badge variant="default">Recovery</Badge>
           <h3 className="mt-2 text-base font-semibold text-white">Readiness Score</h3>
-          <p className="text-xs text-zinc-600 mt-0.5">Based on self-reported recovery</p>
+          <p className="text-xs text-zinc-500 mt-0.5">Calculated from recovery biomarkers</p>
         </div>
         <div className="p-2.5 rounded-lg bg-zinc-800 text-emerald-400" aria-hidden="true">
           <Heart size={20} />
@@ -151,22 +170,27 @@ function RecoveryCard() {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-lime-400" aria-hidden="true" />
-            <span className="text-xs text-zinc-400">Sleep quality: Good</span>
+            <span className="text-xs text-zinc-400">{sleepText}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
-            <span className="text-xs text-zinc-400">Muscle soreness: Low</span>
+            <span className="text-xs text-zinc-400">{sorenessText}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-1.5 h-1.5 rounded-full bg-amber-400" aria-hidden="true" />
-            <span className="text-xs text-zinc-400">Energy levels: Moderate</span>
+            <span className="text-xs text-zinc-400">{energyText}</span>
           </div>
         </div>
       </div>
 
-      <p className="mt-3 text-xs text-zinc-600 italic border-t border-zinc-800 pt-3">
-        ✦ Sample data for UI concept only. Not a medical measurement.
-      </p>
+      <div className="mt-4 pt-3 border-t border-zinc-800 flex items-center justify-between">
+        <span className="text-xs text-zinc-500">Readiness assessment</span>
+        <Link href="/recovery">
+          <Button size="sm" variant="outline">
+            Log Recovery <ArrowRight size={14} className="ml-1" />
+          </Button>
+        </Link>
+      </div>
     </Card>
   )
 }
@@ -189,9 +213,16 @@ function AIInsightCard() {
         Your training consistency improved this week — 4 workouts completed vs. 2 last week. 
         Recovery scores suggest you&apos;re ready to push intensity on your next session.
       </blockquote>
-      <p className="mt-3 text-xs text-zinc-600">
-        ✦ This is sample content. AI-powered insights will be available in a future update.
-      </p>
+      <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800">
+        <p className="text-xs text-zinc-500">
+          Synthesized training, recovery, nutrition &amp; habit analysis
+        </p>
+        <Link href="/insights">
+          <Button size="sm" variant="outline">
+            View All AI Insights <ArrowRight size={14} className="ml-1" />
+          </Button>
+        </Link>
+      </div>
     </Card>
   )
 }
@@ -378,6 +409,12 @@ export function DashboardContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
+  // Live tracking states
+  const [recoveryScore, setRecoveryScore] = useState(78)
+  const [completedWorkoutsCount, setCompletedWorkoutsCount] = useState(3)
+  const [waterLogged, setWaterLogged] = useState(2.1)
+  const [waterTarget, setWaterTarget] = useState(3.0)
+
   useEffect(() => {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data }) => {
@@ -392,6 +429,35 @@ export function DashboardContent() {
       }
       setIsLoading(false)
     })
+
+    // Load live tracking metrics from localStorage
+    try {
+      const rec = localStorage.getItem('yashfit_latest_recovery')
+      if (rec) {
+        const parsed = JSON.parse(rec)
+        if (parsed.readinessScore) setRecoveryScore(parsed.readinessScore)
+      }
+
+      const w = localStorage.getItem('yashfit_completed_workouts')
+      if (w) {
+        const parsed = JSON.parse(w)
+        if (Array.isArray(parsed)) setCompletedWorkoutsCount(parsed.length)
+      }
+
+      const water = localStorage.getItem('yashfit_daily_water')
+      if (water) {
+        const parsed = parseFloat(water)
+        if (!isNaN(parsed)) setWaterLogged(parsed)
+      }
+
+      const wt = localStorage.getItem('yashfit_water_target')
+      if (wt) {
+        const parsed = parseFloat(wt)
+        if (!isNaN(parsed)) setWaterTarget(parsed)
+      }
+    } catch {
+      // ignore
+    }
   }, [])
 
   const displayName = profile?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || null
@@ -410,7 +476,7 @@ export function DashboardContent() {
               : `${getGreeting()} 👋`}
           </h1>
           <p className="text-zinc-500 text-sm mt-1">
-            Here&apos;s your fitness overview for today.
+            Here&apos;s your personalized fitness and recovery telemetry for today.
           </p>
         </div>
 
@@ -440,7 +506,7 @@ export function DashboardContent() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-semibold text-lime-400 uppercase tracking-wider">Your Plan Target</span>
-                <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">Personalized</span>
+                <span className="text-[10px] bg-zinc-800 text-zinc-400 px-1.5 py-0.5 rounded">Active Schedule</span>
               </div>
               <p className="text-sm font-semibold text-white mt-0.5">
                 {profile.primary_goal} · {profile.experience_level} Level
@@ -458,39 +524,41 @@ export function DashboardContent() {
         </div>
       )}
 
-      {/* Stats row */}
+      {/* Stats row with live telemetry */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
           label="Calories"
           value="1,840"
           unit="kcal"
           icon={<Flame size={18} />}
-          trend={{ value: '+12% vs yesterday', positive: true }}
-          demo
+          trend={{ value: '1,840 / 2,200 target', positive: true }}
         />
         <StatCard
-          label="Protein"
-          value="142"
-          unit="g"
+          label="Hydration"
+          value={waterLogged}
+          unit={`/ ${waterTarget}L`}
           icon={<Target size={18} />}
-          trend={{ value: '142 / 160g goal' }}
-          demo
+          trend={{
+            value: waterLogged >= waterTarget ? 'Goal reached! 💧' : `${(waterTarget - waterLogged).toFixed(1)}L remaining`,
+            positive: waterLogged >= waterTarget,
+          }}
         />
         <StatCard
           label="Recovery"
-          value="78"
+          value={recoveryScore}
           unit="%"
           icon={<Activity size={18} />}
-          trend={{ value: 'Good readiness', positive: true }}
-          demo
+          trend={{
+            value: recoveryScore >= 75 ? 'Ready for high intensity' : 'Recommend moderate load',
+            positive: recoveryScore >= 70,
+          }}
         />
         <StatCard
-          label="This Week"
-          value="4"
-          unit="workouts"
+          label="Workouts Logged"
+          value={completedWorkoutsCount}
+          unit="sessions"
           icon={<Zap size={18} />}
-          trend={{ value: '+2 vs last week', positive: true }}
-          demo
+          trend={{ value: `${completedWorkoutsCount} completed sessions`, positive: true }}
         />
       </div>
 

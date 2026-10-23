@@ -9,7 +9,7 @@ export async function updateSession(request: NextRequest) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!url || !key || url === 'your_supabase_project_url' || key === 'your_supabase_anon_key') {
+  if (!url || !key || url === 'your_supabase_project_url' || key === 'your_supabase_anon_key' || !url.startsWith('http') || url.includes('placeholder')) {
     // Supabase credentials not set yet; pass through request without session refresh
     return supabaseResponse
   }

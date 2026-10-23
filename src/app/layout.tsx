@@ -1,5 +1,19 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
+import { Inter } from 'next/font/google'
+import { ToastProvider } from '@/components/ui'
 import './globals.css'
+
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-sans',
+})
+
+export const viewport: Viewport = {
+  themeColor: '#09090b',
+  width: 'device-width',
+  initialScale: 1,
+}
 
 export const metadata: Metadata = {
   title: {
@@ -25,9 +39,9 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-zinc-950 text-white antialiased">
-        {children}
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body className={`${inter.className} min-h-screen bg-zinc-950 text-white antialiased`}>
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   )

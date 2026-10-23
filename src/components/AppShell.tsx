@@ -16,6 +16,7 @@ import {
   X,
   Menu,
   Lightbulb,
+  HeartPulse,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 
@@ -37,49 +38,41 @@ const navItems: NavItem[] = [
     label: 'Workout',
     href: '/workout',
     icon: <Dumbbell size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Exercises',
     href: '/exercises',
     icon: <Activity size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Progress',
     href: '/progress',
     icon: <TrendingUp size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Nutrition',
     href: '/nutrition',
     icon: <Salad size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Meals',
     href: '/meals',
     icon: <Zap size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Grocery',
     href: '/grocery',
     icon: <ShoppingCart size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Recovery',
     href: '/recovery',
-    icon: <Activity size={18} />,
-    comingSoon: true,
+    icon: <HeartPulse size={18} />,
   },
   {
     label: 'Insights',
     href: '/insights',
     icon: <Lightbulb size={18} />,
-    comingSoon: true,
   },
   {
     label: 'Settings',
@@ -152,8 +145,8 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
 
       {/* Bottom */}
       <div className="px-4 py-4 border-t border-zinc-800">
-        <p className="text-xs text-zinc-600 font-medium">YashFit Phase 1</p>
-        <p className="text-xs text-zinc-700 mt-0.5">Your Fitness. Smarter Every Day.</p>
+        <p className="text-xs text-lime-400 font-semibold tracking-wide">YashFit OS</p>
+        <p className="text-xs text-zinc-500 mt-0.5">Your Fitness. Smarter Every Day.</p>
       </div>
     </div>
   )

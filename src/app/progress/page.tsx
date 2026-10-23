@@ -1,19 +1,16 @@
 import type { Metadata } from 'next'
-import { TrendingUp } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
-import { ComingSoonPage } from '@/components/ComingSoonPage'
+import { ProgressAnalyticsContent } from './ProgressAnalyticsContent'
 
-export const metadata: Metadata = { title: 'Progress' }
+export const metadata: Metadata = {
+  title: 'Progress & Strength Analytics',
+  description: 'Track compound lift progression, weekly tonnage, and workout consistency over time.',
+}
 
 export default function ProgressPage() {
   return (
     <AppShell>
-      <ComingSoonPage
-        title="Progress Tracking"
-        description="Track your strength gains, body composition trends, and workout consistency over time. Coming in Phase 2."
-        icon={<TrendingUp size={28} />}
-      />
+      <ProgressAnalyticsContent />
     </AppShell>
   )
 }
-

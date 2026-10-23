@@ -82,3 +82,265 @@ CREATE TRIGGER on_profiles_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION public.handle_updated_at();
 
+-- 4b. Auto-create profile record upon user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (
+    user_id,
+    first_name,
+    age,
+    height_cm,
+    weight_kg,
+    primary_goal,
+    experience_level,
+    training_days_per_week,
+    training_environment,
+    dietary_preference,
+    onboarding_completed
+  ) VALUES (
+    NEW.id,
+    COALESCE(NEW.raw_user_meta_data->>'full_name', split_part(NEW.email, '@', 1), 'Athlete'),
+    25,
+    175,
+    70,
+    'Build Muscle',
+    'Beginner',
+    4,
+    'Commercial Gym',
+    'No Preference',
+    false
+  )
+  ON CONFLICT (user_id) DO NOTHING;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW
+  EXECUTE FUNCTION public.handle_new_user();
+
+-- ========================================================
+-- Phase 3: Exercises & Workout Session Logs
+-- ========================================================
+
+-- 5. Exercises Table
+CREATE TABLE IF NOT EXISTS public.exercises (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  primary_muscle TEXT NOT NULL,
+  secondary_muscles TEXT[] DEFAULT '{}',
+  equipment TEXT NOT NULL,
+  difficulty TEXT NOT NULL,
+  instructions TEXT[] NOT NULL,
+  tips TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.exercises ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view exercises"
+  ON public.exercises
+  FOR SELECT
+  TO authenticated, anon
+  USING (true);
+
+-- 6. Workout Session Logs
+CREATE TABLE IF NOT EXISTS public.workout_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  routine_name TEXT NOT NULL,
+  duration_seconds INTEGER NOT NULL,
+  total_volume_kg NUMERIC(8, 2) NOT NULL DEFAULT 0,
+  total_sets_completed INTEGER NOT NULL DEFAULT 0,
+  completed_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.workout_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own workout logs"
+  ON public.workout_logs
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own workout logs"
+  ON public.workout_logs
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+-- ========================================================
+-- Phase 4: Nutrition & Indian Meal Database
+-- ========================================================
+
+-- 7. Nutrition Plans Table
+CREATE TABLE IF NOT EXISTS public.nutrition_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_calories INTEGER NOT NULL,
+  target_protein_g INTEGER NOT NULL,
+  target_carbs_g INTEGER NOT NULL,
+  target_fats_g INTEGER NOT NULL,
+  water_liters NUMERIC(3, 1) NOT NULL DEFAULT 3.0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.nutrition_plans ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own nutrition plans"
+  ON public.nutrition_plans
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own nutrition plans"
+  ON public.nutrition_plans
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own nutrition plans"
+  ON public.nutrition_plans
+  FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- 8. Food Database Table
+CREATE TABLE IF NOT EXISTS public.foods (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  serving_size TEXT NOT NULL,
+  calories INTEGER NOT NULL,
+  protein_g NUMERIC(5, 1) NOT NULL,
+  carbs_g NUMERIC(5, 1) NOT NULL,
+  fats_g NUMERIC(5, 1) NOT NULL,
+  dietary_preference TEXT NOT NULL,
+  is_budget_friendly BOOLEAN DEFAULT false,
+  cost_inr INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.foods ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Anyone can view food database"
+  ON public.foods
+  FOR SELECT
+  TO authenticated, anon
+  USING (true);
+
+-- ========================================================
+-- Phase 5: Grocery Shopping Lists
+-- ========================================================
+
+-- 9. Grocery Items Table
+CREATE TABLE IF NOT EXISTS public.grocery_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  quantity TEXT NOT NULL DEFAULT '1 pack',
+  category TEXT NOT NULL,
+  estimated_cost_inr NUMERIC(6, 2) NOT NULL DEFAULT 50,
+  checked BOOLEAN NOT NULL DEFAULT false,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.grocery_items ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own grocery items"
+  ON public.grocery_items
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own grocery items"
+  ON public.grocery_items
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own grocery items"
+  ON public.grocery_items
+  FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own grocery items"
+  ON public.grocery_items
+  FOR DELETE
+  USING (auth.uid() = user_id);
+
+-- ========================================================
+-- Phase 6: Recovery Intelligence Logs
+-- ========================================================
+
+-- 10. Recovery Logs Table
+CREATE TABLE IF NOT EXISTS public.recovery_logs (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  sleep_hours NUMERIC(3, 1) NOT NULL,
+  sleep_quality INTEGER NOT NULL CHECK (sleep_quality >= 1 AND sleep_quality <= 5),
+  soreness TEXT NOT NULL,
+  energy TEXT NOT NULL,
+  stress TEXT NOT NULL,
+  readiness_score INTEGER NOT NULL CHECK (readiness_score >= 0 AND readiness_score <= 100),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.recovery_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own recovery logs"
+  ON public.recovery_logs
+  FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own recovery logs"
+  ON public.recovery_logs
+  FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own recovery logs"
+  ON public.recovery_logs
+  FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+-- 11. Performance Indexes
+CREATE INDEX IF NOT EXISTS workout_logs_user_id_idx ON public.workout_logs (user_id, completed_at DESC);
+CREATE INDEX IF NOT EXISTS recovery_logs_user_date_idx ON public.recovery_logs (user_id, date DESC);
+CREATE INDEX IF NOT EXISTS grocery_items_user_id_idx ON public.grocery_items (user_id);
+CREATE INDEX IF NOT EXISTS nutrition_plans_user_id_idx ON public.nutrition_plans (user_id);
+
+-- ========================================================
+-- Seed Data: Exercises (Idempotent)
+-- ========================================================
+INSERT INTO public.exercises (id, name, primary_muscle, secondary_muscles, equipment, difficulty, instructions, tips)
+VALUES
+  ('ex-barbell-bench-press', 'Barbell Bench Press', 'Chest', ARRAY['Triceps', 'Shoulders'], 'Barbell', 'Intermediate', 
+   ARRAY['Lie flat on bench with eyes directly under the bar.', 'Grip the bar slightly wider than shoulder width.', 'Lower with control to mid-chest while tucking elbows slightly.', 'Press upward explosively through chest until arms are extended.'], 
+   ARRAY['Keep feet planted firmly on the floor.', 'Retract your shoulder blades for shoulder safety.']),
+  ('ex-incline-dumbbell-press', 'Incline Dumbbell Press', 'Chest', ARRAY['Shoulders', 'Triceps'], 'Dumbbells', 'Beginner', 
+   ARRAY['Set bench to a 30-degree incline.', 'Hold dumbbells at chest height with palms facing forward.', 'Press dumbbells upward until elbows are almost locked out.', 'Lower slowly under control back to collarbone level.'], 
+   ARRAY['Avoid setting the incline too high to prevent front delt takeover.']),
+  ('ex-pull-up', 'Pull-Up', 'Back', ARRAY['Biceps', 'Core'], 'Pull-up Bar', 'Intermediate', 
+   ARRAY['Grip overhead bar with palms facing away, shoulder-width apart.', 'Engage core and pull elbows down toward hips until chin clears bar.', 'Pause momentarily at the peak.', 'Lower with control to full dead-hang extension.'], 
+   ARRAY['Avoid kicking or swinging your legs.']),
+  ('ex-barbell-deadlift', 'Conventional Barbell Deadlift', 'Back', ARRAY['Hamstrings', 'Glutes', 'Core'], 'Barbell', 'Advanced', 
+   ARRAY['Stand with mid-foot directly under the barbell, feet hip-width apart.', 'Hinge at hips, bend knees slightly, and grip bar just outside knees.', 'Pack lats, flatten back, and push floor away with your legs.', 'Lock out hips and knees simultaneously at the top.'], 
+   ARRAY['Never round your lower spine under heavy loads.', 'Keep the bar dragging close to your shins.']),
+  ('ex-barbell-back-squat', 'Barbell Back Squat', 'Quads', ARRAY['Glutes', 'Hamstrings', 'Core'], 'Barbell', 'Intermediate', 
+   ARRAY['Position barbell across upper traps, step back into shoulder-width stance.', 'Take a deep belly breath, brace core, and break at hips and knees together.', 'Descend until hip crease is below parallel with knees.', 'Drive straight up through mid-foot to starting position.'], 
+   ARRAY['Keep chest up and knees tracking in line with toes.']),
+  ('ex-overhead-barbell-press', 'Standing Overhead Press (OHP)', 'Shoulders', ARRAY['Triceps', 'Core'], 'Barbell', 'Intermediate', 
+   ARRAY['Stand with barbell resting across anterior deltoids and clavicle.', 'Brace glutes and abs firmly.', 'Press the bar straight upward, tucking head slightly to let the bar pass.', 'Lock arms overhead and push head slightly forward.'], 
+   ARRAY['Avoid hyperextending your lumbar spine.'])
+ON CONFLICT (id) DO NOTHING;
+
+-- ========================================================
+-- Seed Data: Indian Foods (Idempotent)
+-- ========================================================
+INSERT INTO public.foods (id, name, serving_size, calories, protein_g, carbs_g, fats_g, dietary_preference, is_budget_friendly, cost_inr)
+VALUES
+  ('food-paneer-100g', 'Low-Fat Paneer Bhurji / Cubes', '100g', 220, 20.0, 4.0, 14.0, 'Vegetarian', false, 45),
+  ('food-soya-chunks-50g', 'Boiled Soya Chunks Curry', '50g (Dry weight)', 170, 26.0, 15.0, 1.0, 'Vegetarian', true, 15),
+  ('food-curd-greek-200g', 'Hung Curd / Greek Yogurt', '200g', 130, 14.0, 8.0, 4.0, 'Vegetarian', true, 25),
+  ('food-whole-eggs-2', 'Boiled Whole Eggs (2 Eggs)', '2 Large Eggs', 155, 13.0, 1.0, 11.0, 'Eggetarian', true, 16),
+  ('food-chicken-breast-150g', 'Grilled Chicken Breast', '150g raw weight', 195, 36.0, 0.0, 4.0, 'Non-Vegetarian', false, 65)
+ON CONFLICT (id) DO NOTHING;
+

@@ -1,19 +1,16 @@
 import type { Metadata } from 'next'
-import { Salad } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
-import { ComingSoonPage } from '@/components/ComingSoonPage'
+import { NutritionDashboardContent } from './NutritionDashboardContent'
 
-export const metadata: Metadata = { title: 'Nutrition' }
+export const metadata: Metadata = {
+  title: 'Smart Nutrition',
+  description: 'Personalized caloric and macro distribution with Indian food options and budget-friendly diet tracking.',
+}
 
 export default function NutritionPage() {
   return (
     <AppShell>
-      <ComingSoonPage
-        title="Smart Nutrition"
-        description="Personalized nutrition planning with Indian food support and budget-friendly meal options. Coming in Phase 2."
-        icon={<Salad size={28} />}
-      />
+      <NutritionDashboardContent />
     </AppShell>
   )
 }
-

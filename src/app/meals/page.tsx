@@ -1,19 +1,16 @@
 import type { Metadata } from 'next'
-import { Zap } from 'lucide-react'
 import { AppShell } from '@/components/AppShell'
-import { ComingSoonPage } from '@/components/ComingSoonPage'
+import { MealsPlannerContent } from './MealsPlannerContent'
 
-export const metadata: Metadata = { title: 'Meals' }
+export const metadata: Metadata = {
+  title: 'Indian Meals & Recipes',
+  description: 'Curated high-protein Indian meal plans, budget swaps, and kitchen cooking cues.',
+}
 
 export default function MealsPage() {
   return (
     <AppShell>
-      <ComingSoonPage
-        title="Meal Planning"
-        description="Generate personalized fitness-friendly meal plans based on your nutritional goals and preferences. Coming in Phase 2."
-        icon={<Zap size={28} />}
-      />
+      <MealsPlannerContent />
     </AppShell>
   )
 }
-
