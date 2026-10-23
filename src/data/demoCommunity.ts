@@ -169,3 +169,4 @@ export const DEMO_NOTIFICATIONS: InAppNotification[] = [
     createdAt: '1 day ago',
   },
 ]
+

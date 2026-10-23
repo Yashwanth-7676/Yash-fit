@@ -116,3 +116,4 @@ export interface LeaderboardEntry {
   scoreLabel: string // e.g. "1,450 XP" or "18 Workouts"
   isCurrentUser: boolean
 }
+

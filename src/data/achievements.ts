@@ -146,3 +146,4 @@ export const DEFAULT_ACHIEVEMENTS: Achievement[] = [
     criteriaText: 'Attain Level 30',
   },
 ]
+

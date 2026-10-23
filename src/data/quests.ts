@@ -93,3 +93,4 @@ export function generateWeeklyQuests(weekId: string): Quest[] {
     },
   ]
 }
+

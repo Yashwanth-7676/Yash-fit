@@ -381,3 +381,4 @@ export function getLeaderboard(type: 'weekly_xp' | 'monthly_workouts' | 'streak'
 
   return entries
 }
+

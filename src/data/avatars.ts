@@ -114,3 +114,4 @@ export const ANIME_AVATARS: AnimeAvatar[] = [
     svgAvatarPath: 'zane',
   },
 ]
+

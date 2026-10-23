@@ -78,3 +78,4 @@ export const DEFAULT_CHALLENGES: FitnessChallenge[] = [
     isPublic: true,
   },
 ]
+

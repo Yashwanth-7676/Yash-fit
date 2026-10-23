@@ -400,3 +400,4 @@ export function unlockAchievement(achievementId: string): { success: boolean; xp
 
   return { success: true, xpAwarded: ach.rewardXp }
 }
+

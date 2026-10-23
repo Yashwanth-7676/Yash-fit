@@ -85,3 +85,4 @@ export interface AnimeAvatar {
   svgAvatarPath?: string
   statBoost: string
 }
+
