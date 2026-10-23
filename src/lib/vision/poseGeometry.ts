@@ -153,3 +153,4 @@ export function checkFullBodyVisibility(landmarks: PoseLandmark[]): boolean {
 
   return visibleCount >= 6
 }
+
