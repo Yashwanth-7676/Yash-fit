@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import {
   Search,
   Dumbbell,
@@ -14,6 +15,7 @@ import {
   Shuffle,
   PlayCircle,
   Video,
+  Camera,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, SectionHeading, useToast } from '@/components/ui'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
@@ -414,7 +416,16 @@ export function ExercisesContent() {
               </div>
             )}
 
-            <div className="pt-2 flex justify-end">
+            <div className="pt-2 flex items-center justify-between gap-3 flex-wrap">
+              <Link href="/form-analysis">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  icon={<Camera size={14} className="text-lime-400" />}
+                >
+                  AI Form Check with Camera
+                </Button>
+              </Link>
               <Button size="md" onClick={() => setActiveExercise(null)}>
                 Got it
               </Button>

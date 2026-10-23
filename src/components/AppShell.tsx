@@ -17,6 +17,7 @@ import {
   Menu,
   Lightbulb,
   HeartPulse,
+  Camera,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 
@@ -43,6 +44,12 @@ const navItems: NavItem[] = [
     label: 'Exercises',
     href: '/exercises',
     icon: <Activity size={18} />,
+  },
+  {
+    label: 'AI Form Check',
+    href: '/form-analysis',
+    icon: <Camera size={18} />,
+    badge: 'AI',
   },
   {
     label: 'Progress',

@@ -9,6 +9,7 @@
     "lint": "next lint --dir src"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.1.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
     "lucide-react": "^0.511.0",

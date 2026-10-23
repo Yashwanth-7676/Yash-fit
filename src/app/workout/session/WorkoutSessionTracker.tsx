@@ -20,6 +20,7 @@ import {
   Video,
   ChevronDown,
   ChevronUp,
+  Camera,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { Button, Card, Input, Badge, useToast } from '@/components/ui'
@@ -415,7 +416,7 @@ export function WorkoutSessionTracker() {
                   <h2 className="text-lg font-bold text-white">{item.exerciseName}</h2>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                   <button
                     type="button"
                     onClick={() => setExpandedDemoId(isDemoExpanded ? null : item.exerciseId)}
@@ -427,11 +428,22 @@ export function WorkoutSessionTracker() {
                     title="Toggle animated exercise technique demonstration"
                   >
                     <Video size={13} className={isDemoExpanded ? 'text-zinc-950' : 'text-lime-400'} />
-                    <span>{isDemoExpanded ? 'Hide Anime Demo' : 'Anime Demo'}</span>
+                    <span>{isDemoExpanded ? 'Hide Anime' : 'Anime Demo'}</span>
                     {isDemoExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                   </button>
 
-                  <div className="text-right text-xs text-zinc-400">
+                  <Link
+                    href="/form-analysis"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-lime-400/50 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all"
+                    title="Open live AI camera form checker in new tab"
+                  >
+                    <Camera size={13} className="text-lime-400" />
+                    <span className="hidden sm:inline">Camera Check</span>
+                  </Link>
+
+                  <div className="text-right text-xs text-zinc-400 shrink-0">
                     Target: <span className="text-white font-medium">{item.targetReps} reps</span>
                   </div>
                 </div>
