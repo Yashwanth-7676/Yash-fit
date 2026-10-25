@@ -77,6 +77,11 @@ const navItems: NavItem[] = [
     icon: <TrendingUp size={18} />,
   },
   {
+    label: 'Digital Twin',
+    href: '/digital-twin',
+    icon: <Activity size={18} />,
+  },
+  {
     label: 'Nutrition',
     href: '/nutrition',
     icon: <Salad size={18} />,
@@ -276,4 +281,3 @@ export function AppShell({ children }: AppShellProps) {
     </div>
   )
 }
-

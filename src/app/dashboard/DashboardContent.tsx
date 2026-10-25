@@ -28,8 +28,10 @@ import {
 } from 'recharts'
 import { Card, StatCard, SectionHeading, Badge, Button } from '@/components/ui'
 import { RpgProgressCard } from '@/components/rpg/RpgProgressCard'
+import { DigitalTwinSummaryCard } from './DigitalTwinSummaryCard'
 import { createClient } from '@/lib/supabase/client'
 import { getUserProfile } from '@/lib/profileService'
+import { dailyWaterKey, readArray, waterTargetKey, workoutHistoryKey, type TwinWorkout } from '@/lib/digitalTwin'
 import type { UserProfile } from '@/types/profile'
 import type { User } from '@supabase/supabase-js'
 
@@ -109,7 +111,7 @@ function TodaysWorkoutCard() {
 
 // ─── Recovery Card ────────────────────────────────────────────────────────────
 
-function RecoveryCard() {
+function RecoveryCard({ userId }: { userId: string }) {
   const [score, setScore] = useState(78)
   const [sleepText, setSleepText] = useState('Sleep quality: Good')
   const [sorenessText, setSorenessText] = useState('Muscle soreness: Low')
@@ -117,7 +119,9 @@ function RecoveryCard() {
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem('yashfit_latest_recovery')
+      const stored = userId === 'demo-user'
+        ? localStorage.getItem('yashfit_latest_recovery')
+        : localStorage.getItem(`yashfit_latest_recovery_${userId}`)
       if (stored) {
         const parsed = JSON.parse(stored)
         if (parsed.readinessScore) setScore(parsed.readinessScore)
@@ -125,10 +129,10 @@ function RecoveryCard() {
         if (parsed.soreness) setSorenessText(`Muscle soreness: ${parsed.soreness}`)
         if (parsed.energy) setEnergyText(`Energy levels: ${parsed.energy}`)
       }
-    } catch {
-      // ignore
+    } catch (error) {
+      console.warn('Unable to load recovery summary for the dashboard:', error)
     }
-  }, [])
+  }, [userId])
 
   const circumference = 2 * Math.PI * 36
 
@@ -207,16 +211,15 @@ function AIInsightCard() {
         </div>
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-white">AI Insight</span>
-          <Badge variant="accent">Sample</Badge>
+          <Badge variant="accent">Rules-based</Badge>
         </div>
       </div>
       <blockquote className="text-sm text-zinc-300 leading-relaxed border-l-2 border-lime-400/40 pl-3">
-        Your training consistency improved this week — 4 workouts completed vs. 2 last week. 
-        Recovery scores suggest you&apos;re ready to push intensity on your next session.
+        Recommendations in your Digital Twin use the workout and recovery records available to your account. When records are missing or recovery suggests caution, YashFit avoids recommending an intensity increase.
       </blockquote>
       <div className="mt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-3 border-t border-zinc-800">
         <p className="text-xs text-zinc-500">
-          Synthesized training, recovery, nutrition &amp; habit analysis
+          Deterministic training guidance · no sample history presented as personal data
         </p>
         <Link href="/insights">
           <Button size="sm" variant="outline">
@@ -420,6 +423,7 @@ export function DashboardContent() {
     const supabase = createClient()
     supabase.auth.getUser().then(async ({ data }) => {
       setUser(data.user)
+      const currentUserId = data.user?.id || 'demo-user'
       if (data.user) {
         const p = await getUserProfile(data.user.id)
         setProfile(p)
@@ -429,36 +433,41 @@ export function DashboardContent() {
         setProfile(p)
       }
       setIsLoading(false)
-    })
 
-    // Load live tracking metrics from localStorage
-    try {
-      const rec = localStorage.getItem('yashfit_latest_recovery')
-      if (rec) {
-        const parsed = JSON.parse(rec)
-        if (parsed.readinessScore) setRecoveryScore(parsed.readinessScore)
-      }
+      try {
+        const rec = currentUserId === 'demo-user'
+          ? localStorage.getItem('yashfit_latest_recovery')
+          : localStorage.getItem(`yashfit_latest_recovery_${currentUserId}`)
+        if (rec) {
+          const parsed = JSON.parse(rec)
+          if (parsed.readinessScore) setRecoveryScore(parsed.readinessScore)
+        }
 
-      const w = localStorage.getItem('yashfit_completed_workouts')
-      if (w) {
-        const parsed = JSON.parse(w)
-        if (Array.isArray(parsed)) setCompletedWorkoutsCount(parsed.length)
-      }
+        let workouts = readArray<TwinWorkout>(workoutHistoryKey(currentUserId))
+        if (currentUserId === 'demo-user' && workouts.length === 0) {
+          workouts = readArray<TwinWorkout>('yashfit_completed_workouts')
+        }
+        setCompletedWorkoutsCount(workouts.length)
 
-      const water = localStorage.getItem('yashfit_daily_water')
-      if (water) {
-        const parsed = parseFloat(water)
-        if (!isNaN(parsed)) setWaterLogged(parsed)
-      }
+        const water = currentUserId === 'demo-user'
+          ? localStorage.getItem('yashfit_daily_water')
+          : localStorage.getItem(dailyWaterKey(currentUserId))
+        if (water) {
+          const parsed = parseFloat(water)
+          if (!isNaN(parsed)) setWaterLogged(parsed)
+        }
 
-      const wt = localStorage.getItem('yashfit_water_target')
-      if (wt) {
-        const parsed = parseFloat(wt)
-        if (!isNaN(parsed)) setWaterTarget(parsed)
+        const wt = currentUserId === 'demo-user'
+          ? localStorage.getItem('yashfit_water_target')
+          : localStorage.getItem(waterTargetKey(currentUserId))
+        if (wt) {
+          const parsed = parseFloat(wt)
+          if (!isNaN(parsed)) setWaterTarget(parsed)
+        }
+      } catch (error) {
+        console.warn('Unable to load dashboard fitness tracking data:', error)
       }
-    } catch {
-      // ignore
-    }
+    }).catch((error: unknown) => console.error('Unable to load the dashboard user:', error))
   }, [])
 
   const displayName = profile?.first_name || user?.user_metadata?.full_name?.split(' ')[0] || null
@@ -528,6 +537,8 @@ export function DashboardContent() {
       {/* Anime Fitness RPG Hero Progression Card */}
       <RpgProgressCard />
 
+      <DigitalTwinSummaryCard profile={profile} userId={user?.id || 'demo-user'} />
+
       {/* Stats row with live telemetry */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard
@@ -569,7 +580,7 @@ export function DashboardContent() {
       {/* Main grid: Today's Workout + Recovery */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <TodaysWorkoutCard />
-        <RecoveryCard />
+        <RecoveryCard userId={user?.id || 'demo-user'} />
       </div>
 
       {/* Charts */}
@@ -594,4 +605,3 @@ export function DashboardContent() {
     </div>
   )
 }
-

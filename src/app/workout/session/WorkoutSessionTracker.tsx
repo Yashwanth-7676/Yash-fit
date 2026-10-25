@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useMemo } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -29,7 +29,21 @@ import { EXERCISE_DATABASE } from '@/data/exercises'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
 import { awardXp, unlockAchievement } from '@/lib/rpg/rpgService'
 import { publishActivity } from '@/lib/social/socialService'
+import { applyExerciseOverrides, getFitnessUserId, workoutHistoryKey } from '@/lib/digitalTwin'
+import { isSupabaseConfigured } from '@/lib/profileService'
+import { createClient } from '@/lib/supabase/client'
 import type { WorkoutRoutine, CompletedExerciseLog, CompletedSetLog, Exercise } from '@/types/workout'
+
+function isMatchingRoutineDraft(draft: unknown, routine: WorkoutRoutine): boolean {
+  if (!draft || typeof draft !== 'object') return false
+  const record = draft as Record<string, unknown>
+  const defaultRoutine = PRESET_WORKOUT_ROUTINES.find((item) => item.id === routine.id)
+  const expectedIds = routine.exercises.map((exercise) => exercise.exerciseId)
+  const draftIds = Array.isArray(record.exerciseIds)
+    ? record.exerciseIds.filter((id): id is string => typeof id === 'string')
+    : defaultRoutine?.exercises.map((exercise) => exercise.exerciseId) ?? []
+  return JSON.stringify(draftIds) === JSON.stringify(expectedIds)
+}
 
 export function WorkoutSessionTracker() {
   const router = useRouter()
@@ -37,8 +51,18 @@ export function WorkoutSessionTracker() {
   const searchParams = useSearchParams()
   const routineId = searchParams.get('routineId') || 'routine-push-day'
 
-  const selectedRoutine: WorkoutRoutine =
-    PRESET_WORKOUT_ROUTINES.find((r) => r.id === routineId) || PRESET_WORKOUT_ROUTINES[0]
+  const selectedRoutine: WorkoutRoutine = useMemo(() => {
+    const routine = PRESET_WORKOUT_ROUTINES.find((item) => item.id === routineId) || PRESET_WORKOUT_ROUTINES[0]
+    const encodedOverrides = searchParams.get('exerciseOverrides')
+    if (!encodedOverrides) return routine
+    try {
+      const overrides = JSON.parse(encodedOverrides) as Record<string, string>
+      return applyExerciseOverrides(routine, overrides)
+    } catch (error) {
+      console.warn('Unable to read exercise substitutions for this session:', error)
+      return routine
+    }
+  }, [routineId, searchParams])
 
   // Overall workout timer
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
@@ -63,7 +87,7 @@ export function WorkoutSessionTracker() {
         const draftStr = sessionStorage.getItem('yashfit_active_session_draft')
         if (draftStr) {
           const draft = JSON.parse(draftStr)
-          if (draft.routineId === routineId && draft.logs) {
+          if (draft.routineId === routineId && draft.logs && isMatchingRoutineDraft(draft, selectedRoutine)) {
             return draft.logs
           }
         }
@@ -90,7 +114,8 @@ export function WorkoutSessionTracker() {
       const draftStr = sessionStorage.getItem('yashfit_active_session_draft')
       if (draftStr) {
         const draft = JSON.parse(draftStr)
-        if (draft.routineId === routineId && typeof draft.elapsedSeconds === 'number') {
+        if (draft.routineId === routineId && typeof draft.elapsedSeconds === 'number' &&
+          isMatchingRoutineDraft(draft, selectedRoutine)) {
           setElapsedSeconds(draft.elapsedSeconds)
           toast.info('Active Session Restored', 'Continuing your logged weights & sets.')
         }
@@ -108,6 +133,7 @@ export function WorkoutSessionTracker() {
           'yashfit_active_session_draft',
           JSON.stringify({
             routineId,
+            exerciseIds: selectedRoutine.exercises.map((exercise) => exercise.exerciseId),
             elapsedSeconds,
             logs: exerciseLogs,
           })
@@ -116,7 +142,7 @@ export function WorkoutSessionTracker() {
         // ignore
       }
     }
-  }, [exerciseLogs, elapsedSeconds, routineId, sessionFinished])
+  }, [exerciseLogs, elapsedSeconds, routineId, selectedRoutine, sessionFinished])
 
   // Workout duration counter
   useEffect(() => {
@@ -240,11 +266,13 @@ export function WorkoutSessionTracker() {
     return acc + sets.filter((s) => s.completed).length
   }, 0)
 
-  const handleFinishSession = () => {
+  const handleFinishSession = async () => {
     setIsWorkoutActive(false)
     setSessionFinished(true)
 
     // Save session in local history storage
+    let accountSyncFailed = false
+    let completedWorkoutCount = 0
     try {
       const sessionPayload = {
         routineName: selectedRoutine.name,
@@ -252,17 +280,57 @@ export function WorkoutSessionTracker() {
         totalVolume,
         totalCompletedSets,
         date: new Date().toISOString(),
+        exercises: selectedRoutine.exercises.map((exercise) => ({
+          exerciseId: exercise.exerciseId,
+          exerciseName: exercise.exerciseName,
+          primaryMuscle: exercise.primaryMuscle,
+          sets: (exerciseLogs[exercise.exerciseId] || []).map((set) => ({
+            weightKg: set.weightKg,
+            reps: set.reps,
+            completed: set.completed,
+          })),
+        })),
       }
-      const existing = JSON.parse(localStorage.getItem('yashfit_completed_workouts') || '[]')
-      existing.unshift(sessionPayload)
-      localStorage.setItem('yashfit_completed_workouts', JSON.stringify(existing))
+      try {
+        const userId = await getFitnessUserId()
+        const userHistory = JSON.parse(localStorage.getItem(workoutHistoryKey(userId)) || '[]')
+        const scopedHistory = Array.isArray(userHistory) ? userHistory : []
+        const saved = userId === 'demo-user'
+          ? JSON.parse(localStorage.getItem('yashfit_completed_workouts') || '[]')
+          : scopedHistory
+        const existing = Array.isArray(saved) ? saved : []
+        const updatedHistory = [sessionPayload, ...existing]
+        completedWorkoutCount = updatedHistory.length
+        localStorage.setItem(workoutHistoryKey(userId), JSON.stringify(updatedHistory))
+        if (userId === 'demo-user') {
+          localStorage.setItem('yashfit_completed_workouts', JSON.stringify(updatedHistory))
+        }
+        if (userId !== 'demo-user' && isSupabaseConfigured()) {
+          const { error } = await createClient().from('workout_logs').insert({
+            user_id: userId,
+            routine_name: sessionPayload.routineName,
+            duration_seconds: sessionPayload.durationSeconds,
+            total_volume_kg: sessionPayload.totalVolume,
+            total_sets_completed: sessionPayload.totalCompletedSets,
+            exercise_logs: sessionPayload.exercises,
+            completed_at: sessionPayload.date,
+          })
+          if (error) {
+            console.warn('Unable to sync workout summary to Supabase:', error.message)
+            accountSyncFailed = true
+          }
+        }
+      } catch (error) {
+        console.warn('Unable to save workout to the account-specific digital twin history:', error)
+        accountSyncFailed = true
+      }
       sessionStorage.removeItem('yashfit_active_session_draft')
 
       // Award Anime RPG Experience Points & Check Achievements
       awardXp('workout', 150, `Completed ${selectedRoutine.name}`, `session-${Date.now()}`)
       unlockAchievement('ach-first-blood')
-      if (existing.length >= 7) unlockAchievement('ach-iron-streak-7')
-      if (existing.length >= 3) unlockAchievement('ach-iron-streak-3')
+      if (completedWorkoutCount >= 7) unlockAchievement('ach-iron-streak-7')
+      if (completedWorkoutCount >= 3) unlockAchievement('ach-iron-streak-3')
 
       // Share milestone to social community feed
       publishActivity(
@@ -272,7 +340,11 @@ export function WorkoutSessionTracker() {
         `${totalVolume.toLocaleString()} kg`
       )
 
-      toast.success('Workout Complete! +150 XP 🏆', `${selectedRoutine.name} finished with ${totalCompletedSets} sets lifted.`)
+      if (accountSyncFailed) {
+        toast.info('Workout Complete — saved locally', `${selectedRoutine.name} finished, but account sync failed.`)
+      } else {
+        toast.success('Workout Complete! +150 XP 🏆', `${selectedRoutine.name} finished with ${totalCompletedSets} sets lifted.`)
+      }
     } catch {
       // ignore storage errors
     }
@@ -598,4 +670,3 @@ export function WorkoutSessionTracker() {
     </div>
   )
 }
-

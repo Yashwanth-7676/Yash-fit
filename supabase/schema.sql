@@ -154,6 +154,7 @@ CREATE TABLE IF NOT EXISTS public.workout_logs (
   duration_seconds INTEGER NOT NULL,
   total_volume_kg NUMERIC(8, 2) NOT NULL DEFAULT 0,
   total_sets_completed INTEGER NOT NULL DEFAULT 0,
+  exercise_logs JSONB NOT NULL DEFAULT '[]'::jsonb,
   completed_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
@@ -346,191 +347,6 @@ ON CONFLICT (id) DO NOTHING;
 
 
 
--- ========================================================
--- Phase 7: Anime Fitness RPG (XP, Level, Quests, Badges)
--- ========================================================
-
--- 12. User RPG Progress Table
-CREATE TABLE IF NOT EXISTS public.user_rpg_progress (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-  total_xp INTEGER NOT NULL DEFAULT 0,
-  current_level INTEGER NOT NULL DEFAULT 1,
-  rank TEXT NOT NULL DEFAULT 'Rookie',
-  current_streak INTEGER NOT NULL DEFAULT 0,
-  longest_streak INTEGER NOT NULL DEFAULT 0,
-  last_active_date DATE DEFAULT CURRENT_DATE,
-  avatar_id TEXT NOT NULL DEFAULT 'avatar-kenji',
-  equipped_title TEXT NOT NULL DEFAULT 'Novice Adventurer',
-  unlocked_avatars TEXT[] NOT NULL DEFAULT ARRAY['avatar-kenji', 'avatar-aoi'],
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.user_rpg_progress ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their own RPG progress"
-  ON public.user_rpg_progress FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own RPG progress"
-  ON public.user_rpg_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own RPG progress"
-  ON public.user_rpg_progress FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- 13. XP Transactions Log (Audit Trail)
-CREATE TABLE IF NOT EXISTS public.xp_transactions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  amount INTEGER NOT NULL,
-  source TEXT NOT NULL,
-  description TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.xp_transactions ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their own XP history"
-  ON public.xp_transactions FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their own XP history"
-  ON public.xp_transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- 14. User Quests
-CREATE TABLE IF NOT EXISTS public.user_quests (
-  id TEXT PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  quest_id TEXT NOT NULL,
-  frequency TEXT NOT NULL,
-  title TEXT NOT NULL,
-  target_value INTEGER NOT NULL,
-  current_value INTEGER NOT NULL DEFAULT 0,
-  completed BOOLEAN NOT NULL DEFAULT false,
-  claimed BOOLEAN NOT NULL DEFAULT false,
-  reward_xp INTEGER NOT NULL,
-  expires_at TIMESTAMPTZ NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.user_quests ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their own quests"
-  ON public.user_quests FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update their own quests"
-  ON public.user_quests FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- 15. User Achievements
-CREATE TABLE IF NOT EXISTS public.user_achievements (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  achievement_id TEXT NOT NULL,
-  unlocked_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  UNIQUE(user_id, achievement_id)
-);
-
-ALTER TABLE public.user_achievements ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their achievements"
-  ON public.user_achievements FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can insert their achievements"
-  ON public.user_achievements FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- ========================================================
--- Phase 8: Social Community, Challenges & Friends
--- ========================================================
-
--- 16. User Privacy Settings
-CREATE TABLE IF NOT EXISTS public.user_privacy_settings (
-  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  profile_visibility TEXT NOT NULL DEFAULT 'public' CHECK (profile_visibility IN ('public', 'friends', 'private')),
-  show_on_leaderboards BOOLEAN NOT NULL DEFAULT true,
-  allow_friend_requests BOOLEAN NOT NULL DEFAULT true,
-  share_workout_activity BOOLEAN NOT NULL DEFAULT true,
-  share_achievements BOOLEAN NOT NULL DEFAULT true,
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.user_privacy_settings ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view own privacy"
-  ON public.user_privacy_settings FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can update own privacy"
-  ON public.user_privacy_settings FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- 17. Fitness Challenges
-CREATE TABLE IF NOT EXISTS public.fitness_challenges (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  category TEXT NOT NULL,
-  creator_name TEXT NOT NULL,
-  start_date DATE NOT NULL,
-  end_date DATE NOT NULL,
-  target_count INTEGER NOT NULL,
-  reward_xp INTEGER NOT NULL,
-  badge_icon TEXT NOT NULL,
-  is_public BOOLEAN NOT NULL DEFAULT true,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.fitness_challenges ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Anyone can view public challenges"
-  ON public.fitness_challenges FOR SELECT USING (is_public = true);
-
--- 18. Challenge Participants
-CREATE TABLE IF NOT EXISTS public.challenge_participants (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  challenge_id TEXT NOT NULL REFERENCES public.fitness_challenges(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  current_progress INTEGER NOT NULL DEFAULT 0,
-  completed BOOLEAN NOT NULL DEFAULT false,
-  joined_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  UNIQUE(challenge_id, user_id)
-);
-
-ALTER TABLE public.challenge_participants ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their challenges"
-  ON public.challenge_participants FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Users can join challenges"
-  ON public.challenge_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
-
--- 19. Friendships and Requests
-CREATE TABLE IF NOT EXISTS public.friend_requests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  receiver_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'cancelled')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
-  UNIQUE(sender_id, receiver_id)
-);
-
-ALTER TABLE public.friend_requests ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view their friend requests"
-  ON public.friend_requests FOR SELECT USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
-
--- 20. Social Activity Feed
-CREATE TABLE IF NOT EXISTS public.social_activity_feed (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  activity_type TEXT NOT NULL,
-  title TEXT NOT NULL,
-  description TEXT NOT NULL,
-  stat_highlight TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
-);
-
-ALTER TABLE public.social_activity_feed ENABLE ROW LEVEL SECURITY;
-
-CREATE POLICY "Users can view activity feed"
-  ON public.social_activity_feed FOR SELECT TO authenticated, anon USING (true);
-
 
 -- ========================================================
 -- Phase 7: Anime Fitness RPG (XP, Level, Quests, Badges)
@@ -716,4 +532,57 @@ ALTER TABLE public.social_activity_feed ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can view activity feed"
   ON public.social_activity_feed FOR SELECT TO authenticated, anon USING (true);
+
+
+
+-- ========================================================
+-- Phase 9: Private Fitness Digital Twin Records
+-- ========================================================
+
+CREATE TABLE IF NOT EXISTS public.body_measurements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  recorded_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  weight_kg NUMERIC(5, 2) CHECK (weight_kg >= 25 AND weight_kg <= 350),
+  waist_cm NUMERIC(5, 2) CHECK (waist_cm >= 20 AND waist_cm <= 250),
+  chest_cm NUMERIC(5, 2) CHECK (chest_cm >= 20 AND chest_cm <= 250),
+  hips_cm NUMERIC(5, 2) CHECK (hips_cm >= 20 AND hips_cm <= 250),
+  arm_cm NUMERIC(5, 2) CHECK (arm_cm >= 5 AND arm_cm <= 120),
+  CHECK (num_nonnulls(weight_kg, waist_cm, chest_cm, hips_cm, arm_cm) > 0)
+);
+
+ALTER TABLE public.body_measurements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage their own body measurements" ON public.body_measurements;
+CREATE POLICY "Users manage their own body measurements"
+  ON public.body_measurements
+  FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS body_measurements_user_recorded_idx
+  ON public.body_measurements (user_id, recorded_at DESC);
+
+CREATE TABLE IF NOT EXISTS public.fitness_scenarios (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL CHECK (char_length(name) BETWEEN 1 AND 80),
+  routine_id TEXT NOT NULL,
+  scenario JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.fitness_scenarios ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Users manage their own fitness scenarios" ON public.fitness_scenarios;
+CREATE POLICY "Users manage their own fitness scenarios"
+  ON public.fitness_scenarios
+  FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE INDEX IF NOT EXISTS fitness_scenarios_user_updated_idx
+  ON public.fitness_scenarios (user_id, updated_at DESC);
+
 

@@ -25,6 +25,9 @@ import {
 } from 'recharts'
 import { Card, Badge, Button, SectionHeading, Input } from '@/components/ui'
 import { calculateReadinessScore, getReadinessCategory } from '@/lib/recoveryCalculator'
+import { getFitnessUserId, readArray, recoveryHistoryKey } from '@/lib/digitalTwin'
+import { isSupabaseConfigured } from '@/lib/profileService'
+import { createClient } from '@/lib/supabase/client'
 import type { EnergyRating, SorenessLevel, StressLevel, RecoveryTrendPoint } from '@/types/recovery'
 
 const DEMO_7DAY_TREND: RecoveryTrendPoint[] = [
@@ -44,21 +47,28 @@ export function RecoveryTrackerContent() {
   const [energy, setEnergy] = useState<EnergyRating>('High')
   const [stress, setStress] = useState<StressLevel>('Low')
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const [saveNotice, setSaveNotice] = useState('')
 
   useEffect(() => {
-    try {
-      const saved = localStorage.getItem('yashfit_latest_recovery')
-      if (saved) {
+    async function loadCheckIn() {
+      try {
+        const userId = await getFitnessUserId()
+        const scopedLatest = userId !== 'demo-user'
+          ? localStorage.getItem(`yashfit_latest_recovery_${userId}`)
+          : null
+        const saved = scopedLatest || (userId === 'demo-user' ? localStorage.getItem('yashfit_latest_recovery') : null)
+        if (!saved) return
         const parsed = JSON.parse(saved)
         if (typeof parsed.sleepHours === 'number') setSleepHours(parsed.sleepHours)
         if (typeof parsed.sleepQuality === 'number') setSleepQuality(parsed.sleepQuality)
         if (parsed.soreness) setSoreness(parsed.soreness)
         if (parsed.energy) setEnergy(parsed.energy)
         if (parsed.stress) setStress(parsed.stress)
+      } catch (error) {
+        console.warn('Unable to load the saved recovery check-in:', error)
       }
-    } catch {
-      // ignore
     }
+    loadCheckIn()
   }, [])
 
   // Current calculated score
@@ -73,7 +83,7 @@ export function RecoveryTrackerContent() {
   const category = getReadinessCategory(readinessScore)
   const circumference = 2 * Math.PI * 45
 
-  const handleSaveCheckIn = () => {
+  const handleSaveCheckIn = async () => {
     try {
       const log = {
         date: new Date().toISOString(),
@@ -84,11 +94,44 @@ export function RecoveryTrackerContent() {
         stress,
         readinessScore,
       }
-      localStorage.setItem('yashfit_latest_recovery', JSON.stringify(log))
+      try {
+        const userId = await getFitnessUserId()
+        if (userId === 'demo-user') {
+          localStorage.setItem('yashfit_latest_recovery', JSON.stringify(log))
+        }
+        localStorage.setItem(`yashfit_latest_recovery_${userId}`, JSON.stringify(log))
+        const history = readArray<typeof log>(recoveryHistoryKey(userId))
+        const today = log.date.slice(0, 10)
+        const updated = [log, ...history.filter((entry) => entry.date.slice(0, 10) !== today)]
+        localStorage.setItem(recoveryHistoryKey(userId), JSON.stringify(updated))
+        if (userId !== 'demo-user' && isSupabaseConfigured()) {
+          const { error } = await createClient().from('recovery_logs').insert({
+            user_id: userId,
+            date: today,
+            sleep_hours: log.sleepHours,
+            sleep_quality: log.sleepQuality,
+            soreness: log.soreness,
+            energy: log.energy,
+            stress: log.stress,
+            readiness_score: log.readinessScore,
+          })
+          if (error) {
+            console.warn('Unable to sync recovery check-in to Supabase:', error.message)
+            setSaveNotice('Check-in saved in this browser; account sync failed.')
+          } else {
+            setSaveNotice('Check-in saved to your account.')
+          }
+        } else {
+          setSaveNotice('Check-in saved in this browser.')
+        }
+      } catch (error) {
+        console.warn('Unable to save recovery to the account-specific digital twin history:', error)
+        setSaveNotice('Check-in saved in this browser; account-specific history could not be updated.')
+      }
       setSavedSuccess(true)
       setTimeout(() => setSavedSuccess(false), 3000)
-    } catch {
-      // ignore
+    } catch (error) {
+      console.error("Unable to save today's recovery check-in:", error)
     }
   }
 
@@ -108,7 +151,7 @@ export function RecoveryTrackerContent() {
           className="p-4 rounded-xl bg-emerald-950/80 border border-emerald-800 text-sm text-emerald-300 flex items-center gap-2"
         >
           <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
-          <span>Today&apos;s recovery metrics logged successfully! Readiness score updated.</span>
+          <span>{saveNotice || 'Today&apos;s recovery metrics saved.'} Readiness score updated.</span>
         </div>
       )}
 
@@ -346,4 +389,3 @@ export function RecoveryTrackerContent() {
     </div>
   )
 }
-

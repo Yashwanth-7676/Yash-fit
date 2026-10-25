@@ -102,10 +102,12 @@ export async function saveUserProfile(
 function getLocalProfile(userId: string): UserProfile | null {
   if (typeof window === 'undefined') return null
   try {
-    const raw = localStorage.getItem(`${PROFILE_STORAGE_KEY}_${userId}`) || localStorage.getItem(PROFILE_STORAGE_KEY)
+    const raw = localStorage.getItem(`${PROFILE_STORAGE_KEY}_${userId}`) ||
+      (userId === 'demo-user' ? localStorage.getItem(PROFILE_STORAGE_KEY) : null)
     if (!raw) return null
     return JSON.parse(raw) as UserProfile
-  } catch {
+  } catch (error) {
+    console.warn('Unable to read the locally cached user profile:', error)
     return null
   }
 }
@@ -117,9 +119,10 @@ function saveLocalProfile(profile: Omit<UserProfile, 'id' | 'created_at' | 'upda
       `${PROFILE_STORAGE_KEY}_${profile.user_id}`,
       JSON.stringify(profile)
     )
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile))
+    if (profile.user_id === 'demo-user') {
+      localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(profile))
+    }
   } catch {
     // ignore local storage errors
   }
 }
-

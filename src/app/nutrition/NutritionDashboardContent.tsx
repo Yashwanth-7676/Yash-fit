@@ -20,12 +20,13 @@ import {
 import { Card, Badge, Button, SectionHeading, Input, Modal, useToast } from '@/components/ui'
 import { calculateMacroTargets } from '@/lib/nutritionCalculator'
 import { getUserProfile } from '@/lib/profileService'
-import { createClient } from '@/lib/supabase/client'
+import { dailyWaterKey, getFitnessUserId, waterTargetKey } from '@/lib/digitalTwin'
 import type { UserProfile } from '@/types/profile'
 import type { DailyMacroTargets } from '@/types/nutrition'
 
 export function NutritionDashboardContent() {
   const toast = useToast()
+  const [userId, setUserId] = useState('demo-user')
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [macroTargets, setMacroTargets] = useState<DailyMacroTargets>({
     calories: 2200,
@@ -53,23 +54,26 @@ export function NutritionDashboardContent() {
 
   useEffect(() => {
     async function loadData() {
+      let currentUserId = 'demo-user'
       try {
-        const supabase = createClient()
-        const { data } = await supabase.auth.getUser()
-        const userId = data?.user?.id || 'demo-user'
-        const p = await getUserProfile(userId)
+        currentUserId = await getFitnessUserId()
+        setUserId(currentUserId)
+        const p = await getUserProfile(currentUserId)
         setProfile(p)
         const targets = calculateMacroTargets(p)
 
         // Check if user set custom water target
-        const savedTarget = localStorage.getItem('yashfit_water_target')
+        const savedTarget = currentUserId === 'demo-user'
+          ? localStorage.getItem('yashfit_water_target')
+          : localStorage.getItem(waterTargetKey(currentUserId))
         if (savedTarget) {
           targets.waterLiters = parseFloat(savedTarget) || targets.waterLiters
         }
 
         setMacroTargets(targets)
         setTempWaterTarget(String(targets.waterLiters))
-      } catch {
+      } catch (error) {
+        console.error('Unable to load nutrition profile and targets:', error)
         const targets = calculateMacroTargets(null)
         setMacroTargets(targets)
       } finally {
@@ -77,15 +81,17 @@ export function NutritionDashboardContent() {
       }
 
       try {
-        const savedWater = localStorage.getItem('yashfit_daily_water')
+        const savedWater = currentUserId === 'demo-user'
+          ? localStorage.getItem('yashfit_daily_water')
+          : localStorage.getItem(dailyWaterKey(currentUserId))
         if (savedWater) {
           const val = parseFloat(savedWater)
           if (!isNaN(val)) {
             setLoggedIntake((prev) => ({ ...prev, waterLiters: val }))
           }
         }
-      } catch {
-        // ignore
+      } catch (error) {
+        console.warn('Unable to load saved hydration:', error)
       }
     }
     loadData()
@@ -95,7 +101,8 @@ export function NutritionDashboardContent() {
     setLoggedIntake((prev) => {
       const next = Number((prev.waterLiters + amountLiters).toFixed(2))
       try {
-        localStorage.setItem('yashfit_daily_water', String(next))
+        localStorage.setItem(dailyWaterKey(userId), String(next))
+        if (userId === 'demo-user') localStorage.setItem('yashfit_daily_water', String(next))
       } catch {
         // ignore
       }
@@ -128,7 +135,8 @@ export function NutritionDashboardContent() {
     setLoggedIntake((prev) => {
       const next = Math.max(0, Number((prev.waterLiters - lastAmount).toFixed(2)))
       try {
-        localStorage.setItem('yashfit_daily_water', String(next))
+        localStorage.setItem(dailyWaterKey(userId), String(next))
+        if (userId === 'demo-user') localStorage.setItem('yashfit_daily_water', String(next))
       } catch {
         // ignore
       }
@@ -143,7 +151,8 @@ export function NutritionDashboardContent() {
     if (!isNaN(val) && val >= 1.0 && val <= 10.0) {
       setMacroTargets((prev) => ({ ...prev, waterLiters: val }))
       try {
-        localStorage.setItem('yashfit_water_target', String(val))
+        localStorage.setItem(waterTargetKey(userId), String(val))
+        if (userId === 'demo-user') localStorage.setItem('yashfit_water_target', String(val))
       } catch {
         // ignore
       }
@@ -430,4 +439,3 @@ export function NutritionDashboardContent() {
     </div>
   )
 }
-

@@ -17,7 +17,18 @@ import {
 } from 'lucide-react'
 import { Card, Badge, Button, SectionHeading } from '@/components/ui'
 import { getUserProfile } from '@/lib/profileService'
+import { isSupabaseConfigured } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
+import {
+  getFitnessUserId,
+  getTrainingAdvice,
+  parseExerciseLogs,
+  readArray,
+  recoveryHistoryKey,
+  workoutHistoryKey,
+  type RecoveryEntry,
+  type TwinWorkout,
+} from '@/lib/digitalTwin'
 import type { UserProfile } from '@/types/profile'
 
 interface InsightItem {
@@ -28,62 +39,135 @@ interface InsightItem {
   actionLabel?: string
   actionHref?: string
   importance: 'High' | 'Medium' | 'Optimal'
+  evidence: string
+  reason: string
+  limitation: string
 }
 
 export function FitnessInsightsContent() {
   const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [workouts, setWorkouts] = useState<TwinWorkout[]>([])
+  const [recovery, setRecovery] = useState<RecoveryEntry[]>([])
 
   useEffect(() => {
     async function loadData() {
       try {
-        const supabase = createClient()
-        const { data } = await supabase.auth.getUser()
-        const userId = data?.user?.id || 'demo-user'
+        const userId = await getFitnessUserId()
         const p = await getUserProfile(userId)
         setProfile(p)
-      } catch {
-        // ignore
+        const history = readArray<TwinWorkout>(workoutHistoryKey(userId))
+        setWorkouts(userId === 'demo-user' && history.length === 0
+          ? readArray<TwinWorkout>('yashfit_completed_workouts')
+          : history)
+        const checkIns = readArray<RecoveryEntry>(recoveryHistoryKey(userId))
+        if (userId === 'demo-user' && checkIns.length === 0) {
+          const latest = localStorage.getItem('yashfit_latest_recovery')
+          setRecovery(latest ? [JSON.parse(latest) as RecoveryEntry] : [])
+        } else {
+          setRecovery(checkIns)
+        }
+        if (userId !== 'demo-user' && isSupabaseConfigured()) {
+          const supabase = createClient()
+          const [workoutResult, recoveryResult] = await Promise.all([
+            supabase.from('workout_logs')
+              .select('routine_name, duration_seconds, total_volume_kg, total_sets_completed, exercise_logs, completed_at')
+              .eq('user_id', userId)
+              .order('completed_at', { ascending: false }),
+            supabase.from('recovery_logs')
+              .select('date, sleep_hours, readiness_score, soreness')
+              .eq('user_id', userId)
+              .order('date', { ascending: false }),
+          ])
+          if (workoutResult.error) {
+            console.warn('Unable to load account workouts for insights:', workoutResult.error.message)
+          } else {
+            const localDates = new Set(history.map((workout) => Date.parse(workout.date)).filter(Number.isFinite))
+            const cloud = (workoutResult.data ?? [])
+              .filter((workout) => !localDates.has(Date.parse(workout.completed_at)))
+              .map((workout) => ({
+                routineName: workout.routine_name,
+                durationSeconds: workout.duration_seconds,
+                totalVolume: Number(workout.total_volume_kg),
+                totalCompletedSets: workout.total_sets_completed,
+                date: workout.completed_at,
+                exercises: parseExerciseLogs(workout.exercise_logs),
+              }))
+            setWorkouts([...(userId === 'demo-user' ? [] : history), ...cloud])
+          }
+          if (recoveryResult.error) {
+            console.warn('Unable to load account recovery for insights:', recoveryResult.error.message)
+          } else {
+            const latestFirst = (recoveryResult.data ?? []).map((entry) => ({
+              date: entry.date,
+              sleepHours: Number(entry.sleep_hours),
+              readinessScore: entry.readiness_score,
+              soreness: entry.soreness,
+            }))
+            const byDate = new Map<string, RecoveryEntry>(latestFirst.map((entry) => [entry.date.slice(0, 10), entry]))
+            checkIns.forEach((entry) => byDate.set(entry.date.slice(0, 10), entry))
+            setRecovery([...byDate.values()].sort((a, b) => Date.parse(b.date) - Date.parse(a.date)))
+          }
+        }
+      } catch (error) {
+        console.error('Unable to load recorded data for fitness insights:', error)
       }
     }
     loadData()
   }, [])
 
+  const trainingAdvice = getTrainingAdvice(profile, workouts, recovery)
   const insights: InsightItem[] = [
     {
-      id: 'ins-1',
+      id: 'training',
       category: 'Training',
-      title: 'Progressive Overload Window Open for Chest',
-      description: `Your last 2 pushing workouts showed strong bar speed and zero fatigue stalling. You are primed to increase your Barbell Bench Press working weight by +2.5 kg on your next Push session.`,
-      actionLabel: 'View Workout Routine',
-      actionHref: '/workout',
-      importance: 'High',
+      title: trainingAdvice.observation,
+      description: trainingAdvice.action,
+      evidence: trainingAdvice.evidence,
+      reason: trainingAdvice.reason,
+      limitation: trainingAdvice.limitation,
+      actionLabel: 'Review Digital Twin',
+      actionHref: '/digital-twin',
+      importance: trainingAdvice.caution ? 'High' : 'Medium',
     },
     {
-      id: 'ins-2',
+      id: 'recovery',
       category: 'Recovery',
-      title: 'Sleep Correlation with Volume Output',
-      description: `Data indicates sessions following 7.5+ hours of sleep generate 18% higher tonnage volume compared to sub-6 hour nights. Maintaining consistent sleep hygiene is your biggest performance multiplier.`,
-      actionLabel: 'Log Recovery Biomarkers',
+      title: recovery.length
+        ? 'Recovery check-ins are available'
+        : 'Recovery trend is not available yet',
+      description: recovery.length
+        ? `Your latest recorded check-in includes ${recovery[0].sleepHours} hours of sleep${recovery[0].readinessScore === undefined ? '' : ` and a calculated readiness score of ${recovery[0].readinessScore}/100`}.`
+        : 'There are no recovery check-ins in this account history to compare against training.',
+      evidence: recovery.length ? `${recovery.length} check-in${recovery.length === 1 ? '' : 's'} recorded.` : 'No recovery entries found.',
+      reason: 'Self-reported recovery gives context for training choices but does not predict performance.',
+      limitation: 'Check-ins are subjective and not clinical measurements.',
+      actionLabel: 'Log Recovery',
       actionHref: '/recovery',
-      importance: 'Optimal',
-    },
-    {
-      id: 'ins-3',
-      category: 'Nutrition',
-      title: 'Protein Distribution Optimization',
-      description: `For your goal of "${profile?.primary_goal || 'Build Muscle'}", spreading your ~${Math.round((profile?.weight_kg || 70) * 2)}g daily protein across 4 distinct boluses (breakfast, lunch, snack, dinner) maximizes muscle protein synthesis (MPS).`,
-      actionLabel: 'Review Meal Plans',
-      actionHref: '/meals',
       importance: 'Medium',
     },
     {
-      id: 'ins-4',
+      id: 'nutrition',
+      category: 'Nutrition',
+      title: 'Nutrition adherence data is missing',
+      description: `Your profile goal is ${profile?.primary_goal || 'not recorded'}, but meal intake is not stored as a dated history in the current app.`,
+      evidence: 'Nutrition targets exist; actual meal adherence records are unavailable.',
+      reason: 'A target alone cannot establish whether daily intake matched that target.',
+      limitation: 'No calorie or protein adherence claim is made.',
+      actionLabel: 'Review Nutrition',
+      actionHref: '/nutrition',
+      importance: 'Medium',
+    },
+    {
+      id: 'habits',
       category: 'Habits',
-      title: 'Workout Day Consistency',
-      description: `You are consistently hitting your target of ${profile?.training_days_per_week || 4} training days per week. Adherence is in the top 10% for your training cycle. Keep this habitual cadence.`,
-      actionLabel: 'Track Progress',
-      actionHref: '/progress',
-      importance: 'Optimal',
+      title: workouts.length >= 3 ? 'Workout history is building' : 'Log more workouts to assess consistency',
+      description: `${workouts.length} completed workout${workouts.length === 1 ? '' : 's'} are currently available to this account.`,
+      evidence: workouts.length ? `Most recent logged session: ${new Date(workouts[0].date).toLocaleDateString()}.` : 'No completed workout records found.',
+      reason: 'Consistency estimates need dated workout records across multiple weeks.',
+      limitation: 'No adherence percentile or prediction is computed.',
+      actionLabel: 'Open Workout Planner',
+      actionHref: '/workout',
+      importance: 'Medium',
     },
   ]
 
@@ -94,7 +178,7 @@ export function FitnessInsightsContent() {
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">AI Fitness Insights &amp; Coach</h1>
           <p className="text-sm text-zinc-400 mt-1">
-            Personalized intelligence derived from your workout volume, recovery check-ins, and nutrition targets.
+            Rules-based guidance from the recorded profile, completed sessions, and recovery check-ins available to this account.
           </p>
         </div>
         <Link href="/dashboard">
@@ -116,7 +200,7 @@ export function FitnessInsightsContent() {
               <Badge variant="accent">Active</Badge>
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
-              Continuously synthesizing exercise adherence, recovery trends, and caloric targets.
+              Deterministic calculations only. No external model is sent personal or health-related data.
             </p>
           </div>
         </div>
@@ -146,6 +230,11 @@ export function FitnessInsightsContent() {
               </div>
               <h3 className="text-base font-bold text-white">{ins.title}</h3>
               <p className="text-xs text-zinc-300 mt-2 leading-relaxed">{ins.description}</p>
+              <div className="mt-3 space-y-2 border-t border-zinc-800 pt-3 text-xs leading-relaxed">
+                <p><span className="font-semibold text-zinc-500">Supporting data: </span><span className="text-zinc-300">{ins.evidence}</span></p>
+                <p><span className="font-semibold text-zinc-500">Reason: </span><span className="text-zinc-300">{ins.reason}</span></p>
+                <p><span className="font-semibold text-zinc-500">Limitation: </span><span className="text-zinc-500">{ins.limitation}</span></p>
+              </div>
             </div>
 
             {ins.actionHref && (

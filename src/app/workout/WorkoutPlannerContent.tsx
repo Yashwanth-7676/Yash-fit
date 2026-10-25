@@ -22,6 +22,7 @@ import { EXERCISE_DATABASE } from '@/data/exercises'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
 import { getUserProfile } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
+import { activePlanKey, applyExerciseOverrides, getFitnessUserId } from '@/lib/digitalTwin'
 import type { WorkoutRoutine, Exercise } from '@/types/workout'
 import type { UserProfile } from '@/types/profile'
 
@@ -30,6 +31,9 @@ export function WorkoutPlannerContent() {
   const [selectedRoutine, setSelectedRoutine] = useState<WorkoutRoutine>(PRESET_WORKOUT_ROUTINES[0])
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [hasAppliedPlan, setHasAppliedPlan] = useState(false)
+  const [appliedTrainingDays, setAppliedTrainingDays] = useState<number | null>(null)
+  const [exerciseOverrides, setExerciseOverrides] = useState<Record<string, string>>({})
 
   useEffect(() => {
     async function loadData() {
@@ -40,7 +44,26 @@ export function WorkoutPlannerContent() {
         const p = await getUserProfile(userId)
         setProfile(p)
         const recommended = getRecommendedRoutineForProfile(p)
-        setSelectedRoutine(recommended)
+        let routine = recommended
+        try {
+          const fitnessUserId = await getFitnessUserId()
+          const appliedPlan = JSON.parse(localStorage.getItem(activePlanKey(fitnessUserId)) || 'null')
+          const appliedRoutine = PRESET_WORKOUT_ROUTINES.find((item) => item.id === appliedPlan?.routineId)
+          if (appliedRoutine) {
+            const overrides = appliedPlan.exerciseOverrides && typeof appliedPlan.exerciseOverrides === 'object'
+              ? appliedPlan.exerciseOverrides as Record<string, string>
+              : {}
+            routine = applyExerciseOverrides(appliedRoutine, overrides, p?.available_equipment)
+            setExerciseOverrides(overrides)
+            setHasAppliedPlan(true)
+            if (typeof appliedPlan.trainingDaysPerWeek === 'number') {
+              setAppliedTrainingDays(appliedPlan.trainingDaysPerWeek)
+            }
+          }
+        } catch (error) {
+          console.warn('Unable to load the applied digital twin plan:', error)
+        }
+        setSelectedRoutine(routine)
       } catch {
         setSelectedRoutine(PRESET_WORKOUT_ROUTINES[0])
       } finally {
@@ -60,7 +83,7 @@ export function WorkoutPlannerContent() {
             Adaptive workout programming tailored to your goals, frequency, and equipment.
           </p>
         </div>
-        <Link href={`/workout/session?routineId=${selectedRoutine.id}`}>
+        <Link href={`/workout/session?routineId=${selectedRoutine.id}${Object.keys(exerciseOverrides).length ? `&exerciseOverrides=${encodeURIComponent(JSON.stringify(exerciseOverrides))}` : ''}`}>
           <Button size="lg" icon={<Play size={18} />} className="shadow-lg shadow-lime-400/10">
             Start Today&apos;s Workout
           </Button>
@@ -74,7 +97,12 @@ export function WorkoutPlannerContent() {
           return (
             <button
               key={routine.id}
-              onClick={() => setSelectedRoutine(routine)}
+              onClick={() => {
+                setSelectedRoutine(routine)
+                setExerciseOverrides({})
+                setHasAppliedPlan(false)
+                setAppliedTrainingDays(null)
+              }}
               className={[
                 'px-4 py-2.5 rounded-xl text-sm font-semibold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 border',
                 isSelected
@@ -95,7 +123,11 @@ export function WorkoutPlannerContent() {
           <div>
             <div className="flex items-center gap-2 mb-2">
               <Badge variant="accent">{selectedRoutine.targetSplit}</Badge>
-              <span className="text-xs text-zinc-500 font-medium">Recommended for today</span>
+              <span className="text-xs text-zinc-500 font-medium">
+                {hasAppliedPlan
+                  ? `Confirmed scenario plan${appliedTrainingDays ? ` · ${appliedTrainingDays} days/week` : ''}`
+                  : 'Recommended for today'}
+              </span>
             </div>
             <h2 className="text-2xl md:text-3xl font-extrabold text-white">{selectedRoutine.name}</h2>
             <p className="text-sm text-zinc-300 mt-1 max-w-2xl leading-relaxed">
@@ -189,7 +221,7 @@ export function WorkoutPlannerContent() {
 
         {/* Launch Button */}
         <div className="pt-2 flex justify-end">
-          <Link href={`/workout/session?routineId=${selectedRoutine.id}`}>
+          <Link href={`/workout/session?routineId=${selectedRoutine.id}${Object.keys(exerciseOverrides).length ? `&exerciseOverrides=${encodeURIComponent(JSON.stringify(exerciseOverrides))}` : ''}`}>
             <Button size="lg" icon={<Play size={18} />}>
               Launch Session Now
             </Button>
@@ -242,4 +274,3 @@ export function WorkoutPlannerContent() {
     </div>
   )
 }
-

@@ -31,6 +31,7 @@ import {
 import { Card, Badge, Button, SectionHeading, StatCard } from '@/components/ui'
 import { getUserProfile } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
+import { getFitnessUserId, readArray, workoutHistoryKey } from '@/lib/digitalTwin'
 import type { UserProfile } from '@/types/profile'
 
 const STRENGTH_PROGRESSION_DATA = [
@@ -66,23 +67,45 @@ export function ProgressAnalyticsContent() {
 
   useEffect(() => {
     async function loadData() {
+      let userId = 'demo-user'
       try {
-        const supabase = createClient()
-        const { data } = await supabase.auth.getUser()
-        const userId = data?.user?.id || 'demo-user'
+        userId = await getFitnessUserId()
         const p = await getUserProfile(userId)
         setProfile(p)
-      } catch {
-        // ignore
+      } catch (error) {
+        console.warn('Unable to load progress profile:', error)
       }
 
       try {
-        const stored = localStorage.getItem('yashfit_completed_workouts')
-        if (stored) {
-          setLoggedWorkouts(JSON.parse(stored))
+        let history = readArray<SavedWorkout & { id?: string }>(workoutHistoryKey(userId))
+        if (userId === 'demo-user' && history.length === 0) {
+          history = readArray<SavedWorkout>('yashfit_completed_workouts')
         }
-      } catch {
-        // ignore
+        if (userId !== 'demo-user') {
+          const { data, error } = await createClient()
+            .from('workout_logs')
+            .select('id, routine_name, duration_seconds, total_volume_kg, total_sets_completed, completed_at')
+            .eq('user_id', userId)
+            .order('completed_at', { ascending: false })
+          if (error) {
+            console.warn('Unable to load account workout history for progress:', error.message)
+          } else {
+            const localDates = new Set(history.map((item) => Date.parse(item.date)).filter(Number.isFinite))
+            const cloudHistory: SavedWorkout[] = (data ?? [])
+              .filter((item) => !localDates.has(Date.parse(item.completed_at)))
+              .map((item) => ({
+                routineName: item.routine_name,
+                durationSeconds: item.duration_seconds,
+                totalVolume: Number(item.total_volume_kg),
+                totalCompletedSets: item.total_sets_completed,
+                date: item.completed_at,
+              }))
+            history = [...history, ...cloudHistory]
+          }
+        }
+        setLoggedWorkouts(history.sort((a, b) => Date.parse(b.date) - Date.parse(a.date)))
+      } catch (error) {
+        console.warn('Unable to read progress workout history:', error)
       }
     }
     loadData()
