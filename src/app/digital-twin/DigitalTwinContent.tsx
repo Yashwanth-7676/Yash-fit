@@ -31,7 +31,8 @@ import {
   XAxis,
   YAxis,
 } from 'recharts'
-import { Badge, Button, Card, Input, SectionHeading } from '@/components/ui'
+import { Badge, Button, Card, Input, SectionHeading, Modal } from '@/components/ui'
+import { InteractiveAvatar } from '@/components/digital-twin/InteractiveAvatar'
 import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import { INDIAN_FOOD_DATABASE } from '@/data/indianFoods'
@@ -60,6 +61,7 @@ import {
   type TwinWorkout,
 } from '@/lib/digitalTwin'
 import type { EquipmentOption, UserProfile } from '@/types/profile'
+import type { MuscleGroup } from '@/types/workout'
 
 const chartTooltipStyle = {
   backgroundColor: '#18181b',
@@ -270,6 +272,10 @@ export function DigitalTwinContent() {
   const [armInput, setArmInput] = useState('')
   const [selectedExercise, setSelectedExercise] = useState('')
   const [strengthTargetKg, setStrengthTargetKg] = useState('')
+  const [avatarMuscle, setAvatarMuscle] = useState<MuscleGroup | null>(null)
+  const [applyingScenario, setApplyingScenario] = useState<TrainingScenario | null>(null)
+  const [renamingScenario, setRenamingScenario] = useState<TrainingScenario | null>(null)
+  const [renameInputValue, setRenameInputValue] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
@@ -424,6 +430,16 @@ export function DigitalTwinContent() {
       : null,
     [workouts, selectedProgress, strengthTargetKg],
   )
+  const handleAvatarMuscleSelect = (muscle: MuscleGroup | null) => {
+    setAvatarMuscle(muscle)
+    if (muscle) {
+      const match = exerciseOptions.find((ex) => {
+        const dbEx = EXERCISE_DATABASE.find((e) => e.name === ex.name)
+        return dbEx?.primaryMuscle === muscle
+      })
+      if (match) setSelectedExercise(match.name)
+    }
+  }
   const today = Date.now()
   const last28Days = workouts.filter((workout) => {
     const date = Date.parse(workout.date)
@@ -622,10 +638,10 @@ export function DigitalTwinContent() {
   }
 
   const applyScenario = (scenario: TrainingScenario) => {
-    const confirmed = window.confirm(
-      `Apply "${scenario.name}" to your active workout plan? This will set ${scenario.sessionsPerWeek} training days per week and use ${getRoutine(scenario.routineId).name}.`,
-    )
-    if (!confirmed) return
+    setApplyingScenario(scenario)
+  }
+
+  const confirmApplyScenario = (scenario: TrainingScenario) => {
     try {
       localStorage.setItem(activePlanKey(userId), JSON.stringify({
         routineId: scenario.routineId,
@@ -643,9 +659,8 @@ export function DigitalTwinContent() {
   }
 
   const renameScenario = (scenario: TrainingScenario) => {
-    const name = window.prompt('Rename saved scenario', scenario.name)
-    if (!name?.trim()) return
-    saveScenario({ ...scenario, name: name.trim() })
+    setRenamingScenario(scenario)
+    setRenameInputValue(scenario.name)
   }
 
   if (isLoading) {
@@ -788,6 +803,26 @@ export function DigitalTwinContent() {
             </div>
           ) : <p className="text-sm text-zinc-500">No measurements recorded.</p>}
         </Card>
+      </section>
+
+      {/* Interactive 3D / SVG Humanoid Anatomy Avatar */}
+      <section className="space-y-4" aria-labelledby="anatomy-avatar-title">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+          <SectionHeading
+            title="Muscular Anatomy & Recovery Avatar"
+            subtitle="Interactive body schematic reflecting completed set volume and recovery readiness per muscle group"
+          />
+          <div className="flex items-center gap-2">
+            <Badge variant="accent">Schematic View</Badge>
+            <Badge variant="default">Deterministic</Badge>
+          </div>
+        </div>
+        <InteractiveAvatar
+          workouts={workouts}
+          recovery={recovery}
+          selectedMuscle={avatarMuscle}
+          onSelectMuscle={handleAvatarMuscleSelect}
+        />
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
@@ -987,6 +1022,107 @@ export function DigitalTwinContent() {
         <Clock3 className="mr-1 inline-block" size={14} />
         Historical records are user-entered/local records; missing entries are not imputed. Workout milestone timelines use logged session frequency only when at least 3 sessions span 14 days and include an uncertainty range. Scenario totals are planning arithmetic, not physiological predictions. Profile measurements and calculated metrics are labeled separately.
       </footer>
+
+      {/* Confirm Plan Application Modal */}
+      <Modal
+        isOpen={applyingScenario !== null}
+        onClose={() => setApplyingScenario(null)}
+        title="Apply Plan to Active Workout Planner"
+        description="Confirm changing your active workout split and frequency in YashFit."
+        maxWidth="md"
+      >
+        {applyingScenario && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-400">Scenario Name</span>
+                <span className="text-sm font-semibold text-white">{applyingScenario.name}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-400">Routine Split</span>
+                <span className="text-sm font-semibold text-lime-400">
+                  {getRoutine(applyingScenario.routineId).name}
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-400">Weekly Frequency</span>
+                <span className="text-sm font-semibold text-white">
+                  {applyingScenario.sessionsPerWeek} sessions/week
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-400">Session Duration</span>
+                <span className="text-sm font-semibold text-white">
+                  {applyingScenario.sessionMinutes} minutes
+                </span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-zinc-400">Rest Days</span>
+                <span className="text-sm font-semibold text-zinc-300">
+                  {applyingScenario.restDays} rest days/week
+                </span>
+              </div>
+            </div>
+
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              Applying this scenario updates your active workout schedule in the Workout Planner. You can switch back or apply a different scenario at any time.
+            </p>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-zinc-800">
+              <Button variant="ghost" onClick={() => setApplyingScenario(null)}>
+                Cancel
+              </Button>
+              <Button
+                icon={<Check size={16} />}
+                onClick={() => {
+                  confirmApplyScenario(applyingScenario)
+                  setApplyingScenario(null)
+                }}
+              >
+                Confirm &amp; Apply Plan
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Rename Scenario Modal */}
+      <Modal
+        isOpen={renamingScenario !== null}
+        onClose={() => setRenamingScenario(null)}
+        title="Rename Saved Scenario"
+        description="Enter a descriptive label for this training & nutrition comparison."
+        maxWidth="sm"
+      >
+        {renamingScenario && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              if (renameInputValue.trim()) {
+                saveScenario({ ...renamingScenario, name: renameInputValue.trim() })
+                setRenamingScenario(null)
+              }
+            }}
+            className="space-y-4"
+          >
+            <Input
+              label="Scenario Name"
+              value={renameInputValue}
+              onChange={(e) => setRenameInputValue(e.target.value)}
+              maxLength={80}
+              autoFocus
+            />
+            <div className="flex justify-end gap-3 pt-2">
+              <Button variant="ghost" type="button" onClick={() => setRenamingScenario(null)}>
+                Cancel
+              </Button>
+              <Button type="submit">
+                Save Name
+              </Button>
+            </div>
+          </form>
+        )}
+      </Modal>
     </div>
   )
 }
