@@ -96,3 +96,4 @@ export function AttentionAreasBanner({ areas }: AttentionAreasBannerProps) {
     </div>
   )
 }
+

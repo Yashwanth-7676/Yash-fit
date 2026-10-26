@@ -297,3 +297,4 @@ export function ExplainableAiCoachPanel({ context }: ExplainableAiCoachPanelProp
     </Card>
   )
 }
+

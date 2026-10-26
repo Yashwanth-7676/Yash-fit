@@ -272,3 +272,4 @@ export function TrendsAndForecastsCard({ workouts, strengthItems }: TrendsAndFor
     </Card>
   )
 }
+

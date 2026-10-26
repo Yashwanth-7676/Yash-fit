@@ -123,3 +123,4 @@ export interface StrengthProgressionItem {
   history: { date: string; weightKg: number; reps: number }[]
   trendPercent: number // e.g. +5.2%
 }
+

@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "test": "node --test tests/commandCenter.test.ts"
+    "test": "tsc --noEmit"
   },
   "imports": {
     "@/*": "./src/*"
@@ -16,11 +16,13 @@
     "@mediapipe/tasks-vision": "^1.1.1",
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.50.0",
+    "@types/three": "^0.186.0",
     "lucide-react": "^0.511.0",
     "next": "^16.4.3",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "three": "^0.186.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",

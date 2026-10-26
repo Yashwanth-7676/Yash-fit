@@ -22,6 +22,7 @@ import {
   Target,
   Award,
   Cpu,
+  Box,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -55,6 +56,12 @@ const navItems: NavItem[] = [
     label: 'Exercises',
     href: '/exercises',
     icon: <Activity size={18} />,
+  },
+  {
+    label: 'Virtual Gym',
+    href: '/virtual-gym',
+    icon: <Box size={18} />,
+    badge: '3D',
   },
   {
     label: 'AI Form Check',

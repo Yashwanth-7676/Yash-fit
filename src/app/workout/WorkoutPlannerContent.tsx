@@ -15,6 +15,7 @@ import {
   PlayCircle,
   X,
   Video,
+  Box,
 } from 'lucide-react'
 import { Card, Badge, Button, SectionHeading } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES, getRecommendedRoutineForProfile } from '@/data/routines'
@@ -263,7 +264,12 @@ export function WorkoutPlannerContent() {
               autoPlay={true}
             />
 
-            <div className="flex justify-end pt-2">
+            <div className="flex items-center justify-between pt-2">
+              <Link href={`/virtual-gym?exercise=${previewExercise.id}`}>
+                <Button size="sm" variant="secondary" icon={<Box size={14} className="text-lime-400" />}>
+                  Open in 3D Virtual Gym
+                </Button>
+              </Link>
               <Button size="sm" variant="outline" onClick={() => setPreviewExercise(null)}>
                 Close Preview
               </Button>

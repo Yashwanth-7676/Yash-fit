@@ -48,3 +48,4 @@ CREATE POLICY "Users insert their own coach interactions"
 
 CREATE INDEX IF NOT EXISTS coach_interactions_user_created_idx
   ON public.coach_interactions (user_id, created_at DESC);
+

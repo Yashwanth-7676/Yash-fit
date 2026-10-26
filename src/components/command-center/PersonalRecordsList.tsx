@@ -95,3 +95,4 @@ export function PersonalRecordsList({ records }: PersonalRecordsListProps) {
     </Card>
   )
 }
+

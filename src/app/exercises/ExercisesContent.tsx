@@ -16,6 +16,7 @@ import {
   PlayCircle,
   Video,
   Camera,
+  Box,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, SectionHeading, useToast } from '@/components/ui'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
@@ -417,15 +418,26 @@ export function ExercisesContent() {
             )}
 
             <div className="pt-2 flex items-center justify-between gap-3 flex-wrap">
-              <Link href="/form-analysis">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  icon={<Camera size={14} className="text-lime-400" />}
-                >
-                  AI Form Check with Camera
-                </Button>
-              </Link>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Link href={`/virtual-gym?exercise=${activeExercise.id}&muscle=${activeExercise.primaryMuscle}`}>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    icon={<Box size={14} className="text-lime-400" />}
+                  >
+                    3D Virtual Gym
+                  </Button>
+                </Link>
+                <Link href="/form-analysis">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    icon={<Camera size={14} className="text-lime-400" />}
+                  >
+                    AI Form Check
+                  </Button>
+                </Link>
+              </div>
               <Button size="md" onClick={() => setActiveExercise(null)}>
                 Got it
               </Button>

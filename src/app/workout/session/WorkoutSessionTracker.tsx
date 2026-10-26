@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   Camera,
+  Box,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { Button, Card, Input, Badge, useToast } from '@/components/ui'
@@ -526,6 +527,17 @@ export function WorkoutSessionTracker() {
                     <span>{isDemoExpanded ? 'Hide Anime' : 'Anime Demo'}</span>
                     {isDemoExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
                   </button>
+
+                  <Link
+                    href={`/virtual-gym?exercise=${item.exerciseId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-2.5 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-300 hover:border-lime-400/50 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all"
+                    title="Open 3D Virtual Gym biomechanics in new tab"
+                  >
+                    <Box size={13} className="text-lime-400" />
+                    <span className="hidden sm:inline">3D Gym</span>
+                  </Link>
 
                   <Link
                     href="/form-analysis"
