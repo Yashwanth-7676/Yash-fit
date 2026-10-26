@@ -1,8 +1,8 @@
-import type { WeeklyAutopilotSchedule, DayScheduleItem } from '@/types/autopilot'
-import type { UserProfile } from '@/types/profile'
-import type { WorkoutRoutine, MuscleGroup } from '@/types/workout'
-import type { TwinWorkout } from '@/lib/digitalTwin'
-import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
+import type { WeeklyAutopilotSchedule, DayScheduleItem } from '../../types/autopilot'
+import type { UserProfile } from '../../types/profile'
+import type { WorkoutRoutine, MuscleGroup } from '../../types/workout'
+import type { TwinWorkout } from '../digitalTwin'
+import { PRESET_WORKOUT_ROUTINES } from '../../data/routines'
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 

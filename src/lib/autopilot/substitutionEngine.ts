@@ -1,6 +1,6 @@
-import type { WorkoutExerciseItem, Exercise } from '@/types/workout'
-import type { EquipmentOption } from '@/types/profile'
-import { EXERCISE_DATABASE } from '@/data/exercises'
+import type { WorkoutExerciseItem, Exercise } from '../../types/workout'
+import type { EquipmentOption } from '../../types/profile'
+import { EXERCISE_DATABASE } from '../../data/exercises'
 
 export interface SubstitutionOption {
   exercise: Exercise

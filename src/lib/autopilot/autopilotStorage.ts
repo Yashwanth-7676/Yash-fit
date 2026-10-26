@@ -1,7 +1,7 @@
-import type { AutopilotAdaptationRecord, TodayWorkoutRecommendation } from '@/types/autopilot'
-import { activePlanKey, readArray } from '@/lib/digitalTwin'
-import { createClient } from '@/lib/supabase/client'
-import { isSupabaseConfigured } from '@/lib/profileService'
+import type { AutopilotAdaptationRecord, TodayWorkoutRecommendation } from '../../types/autopilot'
+import { activePlanKey, readArray } from '../digitalTwin'
+import { createClient } from '../supabase/client'
+import { isSupabaseConfigured } from '../profileService'
 
 export const autopilotHistoryKey = (userId: string) => `yashfit_autopilot_adaptations_${userId}`
 export const autopilotUndoSnapshotKey = (userId: string) => `yashfit_autopilot_undo_${userId}`

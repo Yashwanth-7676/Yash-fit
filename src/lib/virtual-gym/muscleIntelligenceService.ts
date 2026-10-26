@@ -1,8 +1,8 @@
-import type { TwinWorkout } from '@/lib/digitalTwin'
-import type { UserProfile } from '@/types/profile'
-import type { MuscleGroup } from '@/types/workout'
-import type { WeeklyMuscleOverview, MuscleTrainingMetric } from '@/types/virtualGym'
-import { EXERCISE_DATABASE } from '@/data/exercises'
+import type { TwinWorkout } from '../digitalTwin'
+import type { UserProfile } from '../../types/profile'
+import type { MuscleGroup } from '../../types/workout'
+import type { WeeklyMuscleOverview, MuscleTrainingMetric } from '../../types/virtualGym'
+import { EXERCISE_DATABASE } from '../../data/exercises'
 
 export const ALL_MUSCLE_GROUPS: MuscleGroup[] = [
   'Chest',

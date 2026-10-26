@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "test": "tsc --noEmit"
+    "test": "tsc --noEmit && jiti tests/autopilot.test.ts && jiti tests/virtualGym.test.ts"
   },
   "imports": {
     "@/*": "./src/*"

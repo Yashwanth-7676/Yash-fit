@@ -8,6 +8,7 @@ import type { MuscleGroup } from '@/types/workout'
 export function cyclicProgress(t: number): number {
   // Clamp progress to 0-1
   const norm = Math.max(0, Math.min(1, t))
+  if (norm === 0 || norm === 1) return 0
   // Sine curve: starts at 0, reaches 1 at norm=0.5, returns to 0 at norm=1.0
   return Math.sin(norm * Math.PI)
 }

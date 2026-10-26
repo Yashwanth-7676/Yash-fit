@@ -4,10 +4,10 @@ import type {
   ExerciseAdaptation,
   DataSufficiencyLevel,
   OverloadActionType,
-} from '@/types/autopilot'
-import type { WorkoutExerciseItem, WorkoutRoutine } from '@/types/workout'
-import type { TwinWorkout, RecoveryEntry } from '@/lib/digitalTwin'
-import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
+} from '../../types/autopilot'
+import type { WorkoutExerciseItem, WorkoutRoutine } from '../../types/workout'
+import type { TwinWorkout, RecoveryEntry } from '../digitalTwin'
+import { PRESET_WORKOUT_ROUTINES } from '../../data/routines'
 import { findBestSubstitutions } from './substitutionEngine'
 
 export interface TargetRepBounds {
