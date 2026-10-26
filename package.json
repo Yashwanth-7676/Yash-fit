@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "node --test tests/commandCenter.test.ts"
+  },
+  "imports": {
+    "@/*": "./src/*"
   },
   "dependencies": {
     "@mediapipe/tasks-vision": "^1.1.1",

@@ -21,6 +21,7 @@ import {
   Users,
   Target,
   Award,
+  Cpu,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -38,6 +39,12 @@ const navItems: NavItem[] = [
     label: 'Dashboard',
     href: '/dashboard',
     icon: <LayoutDashboard size={18} />,
+  },
+  {
+    label: 'Command Center',
+    href: '/command-center',
+    icon: <Cpu size={18} />,
+    badge: 'AI HQ',
   },
   {
     label: 'Workout',
