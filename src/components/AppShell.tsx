@@ -23,6 +23,7 @@ import {
   Award,
   Cpu,
   Box,
+  Compass,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -51,6 +52,12 @@ const navItems: NavItem[] = [
     label: 'Workout',
     href: '/workout',
     icon: <Dumbbell size={18} />,
+  },
+  {
+    label: 'Autopilot',
+    href: '/training-autopilot',
+    icon: <Compass size={18} />,
+    badge: 'Smart',
   },
   {
     label: 'Exercises',

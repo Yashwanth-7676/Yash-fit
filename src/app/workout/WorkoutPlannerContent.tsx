@@ -16,6 +16,7 @@ import {
   X,
   Video,
   Box,
+  Compass,
 } from 'lucide-react'
 import { Card, Badge, Button, SectionHeading } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES, getRecommendedRoutineForProfile } from '@/data/routines'
@@ -84,11 +85,18 @@ export function WorkoutPlannerContent() {
             Adaptive workout programming tailored to your goals, frequency, and equipment.
           </p>
         </div>
-        <Link href={`/workout/session?routineId=${selectedRoutine.id}${Object.keys(exerciseOverrides).length ? `&exerciseOverrides=${encodeURIComponent(JSON.stringify(exerciseOverrides))}` : ''}`}>
-          <Button size="lg" icon={<Play size={18} />} className="shadow-lg shadow-lime-400/10">
-            Start Today&apos;s Workout
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+          <Link href="/training-autopilot">
+            <Button variant="outline" size="md" icon={<Compass size={16} className="text-lime-400" />}>
+              Smart Autopilot
+            </Button>
+          </Link>
+          <Link href={`/workout/session?routineId=${selectedRoutine.id}${Object.keys(exerciseOverrides).length ? `&exerciseOverrides=${encodeURIComponent(JSON.stringify(exerciseOverrides))}` : ''}`}>
+            <Button size="lg" icon={<Play size={18} />} className="shadow-lg shadow-lime-400/10">
+              Start Today&apos;s Workout
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Routine Tabs */}
