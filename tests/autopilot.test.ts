@@ -272,3 +272,4 @@ describe('Smart Training Autopilot — Weekly Plan Optimization', () => {
     assert.ok(schedule.totalWeeklySets > 0)
   })
 })
+

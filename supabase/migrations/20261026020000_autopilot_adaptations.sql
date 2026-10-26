@@ -24,3 +24,4 @@ CREATE POLICY "Users can manage their own autopilot adaptations"
 
 CREATE INDEX IF NOT EXISTS autopilot_adaptations_user_created_idx
   ON public.autopilot_adaptations (user_id, created_at DESC);
+

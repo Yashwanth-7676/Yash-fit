@@ -106,3 +106,4 @@ export function AdaptationHistoryTimeline({ history }: AdaptationHistoryTimeline
     </div>
   )
 }
+

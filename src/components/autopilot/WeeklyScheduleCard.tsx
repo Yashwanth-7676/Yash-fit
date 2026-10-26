@@ -151,3 +151,4 @@ export function WeeklyScheduleCard({ schedule }: WeeklyScheduleCardProps) {
     </div>
   )
 }
+
