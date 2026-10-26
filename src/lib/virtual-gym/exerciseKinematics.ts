@@ -1,4 +1,4 @@
-import type { Exercise3DConfig, JointAngles, MovementPhase } from '@/types/virtualGym'
+import type { Exercise3DConfig, JointAngles } from '@/types/virtualGym'
 import type { MuscleGroup } from '@/types/workout'
 
 /**

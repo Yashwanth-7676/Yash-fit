@@ -33,7 +33,7 @@ const EXERCISE_MAP = new Map(
  */
 export function calculateWeeklyMuscleOverview(
   workouts: TwinWorkout[],
-  profile?: UserProfile | null
+  _profile?: UserProfile | null
 ): WeeklyMuscleOverview {
   const now = Date.now()
   const sevenDaysAgo = now - 7 * 86400000

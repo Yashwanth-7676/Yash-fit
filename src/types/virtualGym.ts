@@ -1,4 +1,4 @@
-import type { MuscleGroup, ExerciseDifficulty, MotionCycleKey, CameraAngle } from './workout'
+import type { MuscleGroup, ExerciseDifficulty, MotionCycleKey } from './workout'
 import type { EquipmentOption } from './profile'
 
 export type MuscleHighlightRole = 'primary' | 'secondary' | 'none'

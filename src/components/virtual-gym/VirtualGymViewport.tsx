@@ -14,9 +14,6 @@ import {
   RotateCcw,
   Maximize2,
   Minimize2,
-  Compass,
-  Eye,
-  Sliders,
   Layers,
   Sparkles,
   AlertTriangle,
@@ -48,6 +45,12 @@ export function VirtualGymViewport({
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [hoveredMuscle, setHoveredMuscle] = useState<string | null>(null)
   const [activePhaseIndex, setActivePhaseIndex] = useState<number>(0)
+
+  // Keep latest props in refs for raycasting event listeners without remounting scene
+  const selectedMuscleRef = useRef<MuscleGroup | null | undefined>(selectedMuscle)
+  selectedMuscleRef.current = selectedMuscle
+  const onSelectMuscleRef = useRef<((muscle: MuscleGroup | null) => void) | undefined>(onSelectMuscle)
+  onSelectMuscleRef.current = onSelectMuscle
 
   // References for Three.js instance
   const sceneRef = useRef<THREE.Scene | null>(null)
@@ -222,8 +225,8 @@ export function VirtualGymViewport({
       const hits = raycaster.intersectObjects(rig.muscleMeshes.map((m) => m.mesh))
       if (hits.length > 0 && hits[0].object.userData.isMuscle) {
         const clickedMuscle = hits[0].object.userData.muscleGroup as MuscleGroup
-        if (onSelectMuscle) {
-          onSelectMuscle(clickedMuscle === selectedMuscle ? null : clickedMuscle)
+        if (onSelectMuscleRef.current) {
+          onSelectMuscleRef.current(clickedMuscle === selectedMuscleRef.current ? null : clickedMuscle)
         }
       }
     }

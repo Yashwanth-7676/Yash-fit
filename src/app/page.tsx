@@ -18,6 +18,11 @@ import {
   BarChart3,
   Target,
   Activity,
+  Box,
+  Cpu,
+  Camera,
+  Users,
+  Sparkles,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { Button } from '@/components/ui'
@@ -315,45 +320,45 @@ function DashboardPreview() {
 
 const features = [
   {
-    icon: <Dumbbell size={22} />,
-    title: 'Adaptive Workouts',
+    icon: <Box size={22} />,
+    title: '3D Virtual Gym & Anatomy',
     description:
-      'Workout plans that adapt to your performance, recovery, and goals. Smart exercise replacement when needed.',
-    badge: 'Core',
+      'Interactive 3D biomechanical mannequin and procedural kinematic engine with weekly muscle intelligence tracking.',
+    badge: '3D Biomechanics',
+  },
+  {
+    icon: <Cpu size={22} />,
+    title: 'AI Command Center',
+    description:
+      'High-level readiness telemetry, explainable AI coaching, and adaptive progressive overload calibrations.',
+    badge: 'AI HQ',
+  },
+  {
+    icon: <Camera size={22} />,
+    title: 'AI Pose & Form Analysis',
+    description:
+      'Private, in-browser MediaPipe pose landmark estimation providing real-time rep counting and angle alignment feedback.',
+    badge: 'Vision AI',
+  },
+  {
+    icon: <Dumbbell size={22} />,
+    title: 'Adaptive Workouts & Planner',
+    description:
+      'Personalized strength routines that dynamically calibrate volume and intensity based on recovery check-ins.',
+    badge: 'Training',
+  },
+  {
+    icon: <Users size={22} />,
+    title: 'Anime RPG & Community',
+    description:
+      'Anime-inspired avatars, XP progression, daily quests, friends, and friendly community fitness challenges.',
+    badge: 'Social RPG',
   },
   {
     icon: <Salad size={22} />,
-    title: 'Smart Nutrition',
+    title: 'Smart Indian Nutrition',
     description:
-      'Personalized nutrition planning with Indian food support. Budget-friendly meal plans tailored to your fitness goals.',
-    badge: 'Nutrition',
-  },
-  {
-    icon: <Heart size={22} />,
-    title: 'Recovery Intelligence',
-    description:
-      'Understand your training readiness using recovery tracking. Know when to push and when to rest.',
-    badge: 'Recovery',
-  },
-  {
-    icon: <TrendingUp size={22} />,
-    title: 'Progress Insights',
-    description:
-      'Turn your fitness history into actionable insights. Track strength gains, consistency, and body composition trends.',
-    badge: 'Analytics',
-  },
-  {
-    icon: <Brain size={22} />,
-    title: 'AI Fitness Coach',
-    description:
-      'An intelligent fitness assistant that understands your history, preferences, and goals to give personalized guidance.',
-    badge: 'AI',
-  },
-  {
-    icon: <ChefHat size={22} />,
-    title: 'Kitchen-to-Meal',
-    description:
-      'Turn the ingredients you have at home into practical, fitness-friendly meals with step-by-step guidance.',
+      'Macro calculations supporting vegetarian, eggetarian, and regional Indian whole food meal planning.',
     badge: 'Nutrition',
   },
 ]

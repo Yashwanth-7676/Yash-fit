@@ -13,7 +13,6 @@ import type { TwinWorkout, RecoveryEntry } from '@/lib/digitalTwin'
 import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import { calculateMacroTargets } from '@/lib/nutritionCalculator'
-import { calculateReadinessScore, getReadinessCategory } from '@/lib/recoveryCalculator'
 
 export const DAILY_ACTIONS_STORAGE_KEY = 'yashfit_daily_actions'
 export const ADAPTIVE_PLAN_DECISION_KEY = 'yashfit_adaptive_plan_decision'
@@ -125,7 +124,7 @@ export function computePersonalRecords(workouts: TwinWorkout[]): PersonalRecordI
 export function detectAttentionAreas(
   status: TodayFitnessStatus,
   workouts: TwinWorkout[],
-  recovery: RecoveryEntry[]
+  _recovery: RecoveryEntry[]
 ): AttentionArea[] {
   const areas: AttentionArea[] = []
 
