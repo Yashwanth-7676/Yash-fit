@@ -393,3 +393,4 @@ export function Anatomy2DFallback({
     </div>
   )
 }
+

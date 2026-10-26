@@ -556,3 +556,4 @@ export function VirtualGymViewport({
     </div>
   )
 }
+

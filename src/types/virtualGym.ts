@@ -89,3 +89,4 @@ export interface WeeklyMuscleOverview {
   generatedAt: string
   disclaimer: string
 }
+

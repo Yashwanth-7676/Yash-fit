@@ -246,3 +246,4 @@ export function ExerciseDetailsPanel({ config }: ExerciseDetailsPanelProps) {
     </div>
   )
 }
+

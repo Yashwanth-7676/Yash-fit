@@ -574,3 +574,4 @@ export function buildMannequinRig(): MannequinRig {
     highlightMuscles,
   }
 }
+

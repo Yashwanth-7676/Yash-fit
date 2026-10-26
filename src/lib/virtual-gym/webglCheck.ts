@@ -61,3 +61,4 @@ export function disposeThreeScene(
     console.warn('Error during Three.js scene disposal:', err)
   }
 }
+

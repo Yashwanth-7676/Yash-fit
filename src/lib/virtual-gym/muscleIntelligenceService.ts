@@ -235,3 +235,4 @@ export function getRecommendedExercisesForMuscle(muscle: MuscleGroup): string[] 
       return ['Standard Compound Movement']
   }
 }
+

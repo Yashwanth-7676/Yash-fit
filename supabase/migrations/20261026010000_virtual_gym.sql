@@ -22,3 +22,4 @@ CREATE POLICY "Users can manage their own virtual gym preferences"
 
 CREATE INDEX IF NOT EXISTS virtual_gym_preferences_user_idx
   ON public.virtual_gym_preferences (user_id);
+
