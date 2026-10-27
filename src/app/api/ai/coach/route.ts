@@ -1,48 +1,55 @@
-import { NextResponse } from 'next/server'
-import { queryAiCoach, type CoachUserContext } from '@/lib/ai/providers'
+import { NextRequest, NextResponse } from 'next/server'
+import { buildCoachContext } from '@/lib/ai/coachContextService'
+import { queryAiCoach } from '@/lib/ai/providers'
+import { createClient } from '@/lib/supabase/server'
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    const { query, context } = body
+    const { query, userId = 'demo-user' } = body
 
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: 'Query must be a non-empty string.' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'Query message is required.' }, { status: 400 })
     }
 
-    if (query.length > 500) {
-      return NextResponse.json(
-        { success: false, error: 'Query exceeds maximum allowed length of 500 characters.' },
-        { status: 400 }
-      )
-    }
+    // 1. Gather verified fitness context
+    const context = await buildCoachContext(userId)
 
-    const safeContext: CoachUserContext = {
-      profile: context?.profile ?? null,
-      workouts: Array.isArray(context?.workouts) ? context.workouts : [],
-      recovery: Array.isArray(context?.recovery) ? context.recovery : [],
-      waterLoggedLiters: Number(context?.waterLoggedLiters) || 0,
-      waterTargetLiters: Number(context?.waterTargetLiters) || 2.5,
-      activeStreak: Number(context?.activeStreak) || 0,
-      rpgLevel: Number(context?.rpgLevel) || 1,
-      rpgRank: typeof context?.rpgRank === 'string' ? context.rpgRank : 'Rookie',
-    }
+    // 2. Query Coach (Cloud LLM or Deterministic Rule Engine)
+    const coachResponse = await queryAiCoach(query, context)
 
-    const response = await queryAiCoach(query.trim(), safeContext)
+    // 3. Multi-turn Persistence in Supabase if authenticated
+    try {
+      const supabase = await createClient()
+      const { data: authData } = await supabase.auth.getUser()
+      if (authData?.user) {
+        // Record user query
+        await supabase.from('coach_conversations').insert({
+          user_id: authData.user.id,
+          role: 'user',
+          content: query,
+        })
+        // Record coach reply
+        await supabase.from('coach_conversations').insert({
+          user_id: authData.user.id,
+          role: 'assistant',
+          content: coachResponse.recommendation,
+          response_metadata: coachResponse as any,
+        })
+      }
+    } catch {
+      // In demo/offline mode, client handles localStorage persistence
+    }
 
     return NextResponse.json({
       success: true,
-      response,
+      response: coachResponse,
     })
-  } catch (error) {
-    console.error('AI Coach API error:', error)
+  } catch (err: any) {
+    console.error('Coach API Error:', err)
     return NextResponse.json(
-      { success: false, error: 'Failed to process coach query.' },
+      { error: 'Failed to process coach query.', details: err?.message },
       { status: 500 }
     )
   }
 }
-

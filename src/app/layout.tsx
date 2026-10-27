@@ -1,13 +1,11 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter } from 'next/font/google'
 import { ToastProvider } from '@/components/ui'
 import './globals.css'
 
-const inter = Inter({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-sans',
-})
+const inter = {
+  variable: 'font-sans',
+  className: '',
+}
 
 export const viewport: Viewport = {
   themeColor: '#09090b',

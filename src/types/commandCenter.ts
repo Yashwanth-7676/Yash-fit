@@ -98,6 +98,11 @@ export interface StructuredCoachResponse {
   actionHref?: string
   limitations: string
   provider: 'gemini' | 'openai' | 'rule_based'
+  facts?: string[]
+  calculations?: string[]
+  estimates?: string[]
+  suggestions?: string[]
+  missingData?: string[]
 }
 
 export interface AiCoachMessage {

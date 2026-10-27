@@ -5,9 +5,10 @@ import type {
   XpTransaction,
   Quest,
   Achievement,
-} from '@/types/rpg'
-import { generateDailyQuests, generateWeeklyQuests } from '@/data/quests'
-import { DEFAULT_ACHIEVEMENTS } from '@/data/achievements'
+} from '../../types/rpg'
+import { generateDailyQuests, generateWeeklyQuests } from '../../data/quests'
+import { DEFAULT_ACHIEVEMENTS } from '../../data/achievements'
+import { createClient } from '../supabase/client'
 
 export const RANKS_CONFIG: Record<AnimeRank, RankDefinition> = {
   Rookie: {
@@ -131,6 +132,10 @@ const STORAGE_KEYS = {
   ACHIEVEMENTS: 'yashfit_achievements',
 }
 
+let inMemoryProgress: UserRpgProgress | null = null
+let inMemoryTransactions: XpTransaction[] = []
+let inMemoryEvents: string[] = []
+
 export function getInitialProgress(userId = 'demo-user'): UserRpgProgress {
   return {
     userId,
@@ -152,7 +157,9 @@ export function getInitialProgress(userId = 'demo-user'): UserRpgProgress {
 }
 
 export function getUserRpgProgress(): UserRpgProgress {
-  if (typeof window === 'undefined') return getInitialProgress()
+  if (typeof window === 'undefined') {
+    return inMemoryProgress || getInitialProgress()
+  }
   try {
     const stored = localStorage.getItem(STORAGE_KEYS.RPG_PROGRESS)
     if (stored) {
@@ -167,7 +174,10 @@ export function getUserRpgProgress(): UserRpgProgress {
 }
 
 export function saveUserRpgProgress(progress: UserRpgProgress): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    inMemoryProgress = { ...progress }
+    return
+  }
   try {
     localStorage.setItem(STORAGE_KEYS.RPG_PROGRESS, JSON.stringify(progress))
   } catch {
@@ -188,17 +198,24 @@ export function awardXp(
   const todayStr = new Date().toISOString().split('T')[0]
 
   // Idempotency check: prevent duplicate event processing
-  if (eventId && typeof window !== 'undefined') {
-    try {
-      const processed: string[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROCESSED_EVENTS) || '[]')
-      if (processed.includes(eventId)) {
+  if (eventId) {
+    if (typeof window !== 'undefined') {
+      try {
+        const processed: string[] = JSON.parse(localStorage.getItem(STORAGE_KEYS.PROCESSED_EVENTS) || '[]')
+        if (processed.includes(eventId)) {
+          return { success: false, newProgress: current, leveledUp: false, rankUp: false }
+        }
+        processed.push(eventId)
+        if (processed.length > 500) processed.shift()
+        localStorage.setItem(STORAGE_KEYS.PROCESSED_EVENTS, JSON.stringify(processed))
+      } catch {
+        // ignore
+      }
+    } else {
+      if (inMemoryEvents.includes(eventId)) {
         return { success: false, newProgress: current, leveledUp: false, rankUp: false }
       }
-      processed.push(eventId)
-      if (processed.length > 500) processed.shift()
-      localStorage.setItem(STORAGE_KEYS.PROCESSED_EVENTS, JSON.stringify(processed))
-    } catch {
-      // ignore
+      inMemoryEvents.push(eventId)
     }
   }
 
@@ -272,6 +289,28 @@ export function awardXp(
   }
   saveXpTransaction(tx)
 
+  // Asynchronously record to Supabase if authenticated and eventId provided
+  if (eventId && typeof window !== 'undefined') {
+    try {
+      const supabase = createClient()
+      supabase.auth.getUser().then(({ data: authData }) => {
+        if (authData?.user) {
+          supabase
+            .from('rpg_idempotent_events')
+            .insert({
+              user_id: authData.user.id,
+              event_key: eventId,
+              source,
+              xp_awarded: allowedAmount,
+            })
+            .then(() => {}, () => {})
+        }
+      }).catch(() => {})
+    } catch {
+      // ignore
+    }
+  }
+
   return {
     success: true,
     newProgress: updated,
@@ -280,8 +319,65 @@ export function awardXp(
   }
 }
 
+/**
+ * Records an intentional rest day or active recovery session.
+ * Protects streaks so users are never penalized for responsible rest.
+ */
+export function recordRestDay(
+  userId = 'demo-user',
+  dateStr = new Date().toISOString().split('T')[0]
+): { success: boolean; newProgress: UserRpgProgress; streakPreserved: boolean } {
+  const current = getUserRpgProgress()
+  const eventId = `rest_day_${dateStr}`
+
+  // If already active today, no change in streak needed
+  if (current.lastActiveDate === dateStr) {
+    return { success: true, newProgress: current, streakPreserved: true }
+  }
+
+  let streak = current.currentStreak
+  let longest = current.longestStreak
+  if (current.lastActiveDate) {
+    const lastDate = new Date(current.lastActiveDate)
+    const thisDate = new Date(dateStr)
+    const diffDays = Math.round((thisDate.getTime() - lastDate.getTime()) / (1000 * 3600 * 24))
+
+    if (diffDays === 1) {
+      streak += 1
+      if (streak > longest) longest = streak
+    } else if (diffDays > 1) {
+      streak = 1
+    }
+  } else {
+    streak = 1
+  }
+
+  // Award safe recovery XP (40 XP) with idempotent key
+  const awardResult = awardXp(
+    'recovery',
+    40,
+    `Logged Rest & Recovery Day (${dateStr})`,
+    eventId
+  )
+
+  const updatedProgress: UserRpgProgress = {
+    ...awardResult.newProgress,
+    currentStreak: streak,
+    longestStreak: Math.max(longest, streak),
+    lastActiveDate: dateStr,
+  }
+
+  saveUserRpgProgress(updatedProgress)
+
+  return {
+    success: true,
+    newProgress: updatedProgress,
+    streakPreserved: true,
+  }
+}
+
 export function getXpTransactions(): XpTransaction[] {
-  if (typeof window === 'undefined') return []
+  if (typeof window === 'undefined') return inMemoryTransactions
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.XP_TRANSACTIONS)
     return raw ? JSON.parse(raw) : []
@@ -291,7 +387,11 @@ export function getXpTransactions(): XpTransaction[] {
 }
 
 function saveXpTransaction(tx: XpTransaction): void {
-  if (typeof window === 'undefined') return
+  if (typeof window === 'undefined') {
+    inMemoryTransactions.unshift(tx)
+    if (inMemoryTransactions.length > 100) inMemoryTransactions.pop()
+    return
+  }
   try {
     const list = getXpTransactions()
     list.unshift(tx)

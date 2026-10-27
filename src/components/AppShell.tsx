@@ -24,6 +24,7 @@ import {
   Cpu,
   Box,
   Compass,
+  Bot,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -47,6 +48,12 @@ const navItems: NavItem[] = [
     href: '/command-center',
     icon: <Cpu size={18} />,
     badge: 'AI HQ',
+  },
+  {
+    label: 'AI Coach',
+    href: '/coach',
+    icon: <Bot size={18} />,
+    badge: 'AI 2.0',
   },
   {
     label: 'Workout',
@@ -98,9 +105,21 @@ const navItems: NavItem[] = [
     icon: <TrendingUp size={18} />,
   },
   {
+    label: 'Transformation',
+    href: '/transformation',
+    icon: <Camera size={18} />,
+    badge: 'Visual',
+  },
+  {
     label: 'Digital Twin',
     href: '/digital-twin',
     icon: <Activity size={18} />,
+  },
+  {
+    label: 'Nutrition Planner',
+    href: '/nutrition-planner',
+    icon: <Salad size={18} />,
+    badge: 'Smart',
   },
   {
     label: 'Nutrition',

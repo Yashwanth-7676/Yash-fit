@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import {
   Award,
   Flame,
@@ -16,9 +16,11 @@ import {
   Crown,
   CheckCircle2,
   Lock,
+  Search,
 } from 'lucide-react'
-import { Card, Badge, Button, useToast } from '@/components/ui'
+import { Card, Badge, Button, Input } from '@/components/ui'
 import { getAchievements, unlockAchievement } from '@/lib/rpg/rpgService'
+import { AchievementCelebrationModal } from '@/components/rpg/AchievementCelebrationModal'
 import type { Achievement, AchievementCategory } from '@/types/rpg'
 
 const CATEGORIES: { id: AchievementCategory | 'all'; label: string }[] = [
@@ -28,6 +30,12 @@ const CATEGORIES: { id: AchievementCategory | 'all'; label: string }[] = [
   { id: 'nutrition', label: 'Nutrition' },
   { id: 'recovery', label: 'Recovery' },
   { id: 'form', label: 'Form Analysis' },
+]
+
+const STATUS_FILTERS: { id: 'all' | 'unlocked' | 'locked'; label: string }[] = [
+  { id: 'all', label: 'All Status' },
+  { id: 'unlocked', label: 'Unlocked' },
+  { id: 'locked', label: 'In Progress / Locked' },
 ]
 
 const TIER_COLORS: Record<string, { bg: string; text: string; border: string }> = {
@@ -54,21 +62,52 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 }
 
 export function AchievementsContent() {
-  const toast = useToast()
   const [selectedCategory, setSelectedCategory] = useState<AchievementCategory | 'all'>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | 'unlocked' | 'locked'>('all')
+  const [searchQuery, setSearchQuery] = useState('')
   const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [celebrationAchievement, setCelebrationAchievement] = useState<Achievement | null>(null)
 
   useEffect(() => {
     setAchievements(getAchievements())
   }, [])
 
-  const filtered = achievements.filter(
-    (a) => selectedCategory === 'all' || a.category === selectedCategory
-  )
+  const filtered = useMemo(() => {
+    return achievements.filter((a) => {
+      // Category filter
+      if (selectedCategory !== 'all' && a.category !== selectedCategory) return false
+      // Status filter
+      if (statusFilter === 'unlocked' && !a.unlocked) return false
+      if (statusFilter === 'locked' && a.unlocked) return false
+      // Search
+      if (searchQuery.trim()) {
+        const query = searchQuery.toLowerCase()
+        const matchesTitle = a.title.toLowerCase().includes(query)
+        const matchesDesc = a.description.toLowerCase().includes(query)
+        const matchesCrit = a.criteriaText.toLowerCase().includes(query)
+        if (!matchesTitle && !matchesDesc && !matchesCrit) return false
+      }
+      return true
+    })
+  }, [achievements, selectedCategory, statusFilter, searchQuery])
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length
   const totalCount = achievements.length
-  const pct = Math.round((unlockedCount / totalCount) * 100)
+  const pct = totalCount > 0 ? Math.round((unlockedCount / totalCount) * 100) : 0
+
+  const handleManualUnlock = (ach: Achievement) => {
+    if (ach.unlocked) {
+      setCelebrationAchievement(ach)
+      return
+    }
+    const res = unlockAchievement(ach.id)
+    if (res.success) {
+      const updated = getAchievements()
+      setAchievements(updated)
+      const found = updated.find((item) => item.id === ach.id) || ach
+      setCelebrationAchievement(found)
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto space-y-8">
@@ -81,7 +120,7 @@ export function AchievementsContent() {
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Achievements &amp; Badges</h1>
           <p className="text-sm text-zinc-400 mt-1 max-w-xl">
-            Unlock achievements across verified workouts, consecutive day streaks, nutrition discipline, and AI form mastery.
+            Unlock achievements across verified workouts, rest day discipline, nutrition tracking, and AI form mastery.
           </p>
         </div>
 
@@ -96,6 +135,37 @@ export function AchievementsContent() {
               {unlockedCount} of {totalCount} Badges
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Filter and Search Bar */}
+      <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+        {/* Search */}
+        <div className="relative flex-1 max-w-md">
+          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search badges by title or criteria..."
+            className="pl-9 bg-zinc-900 border-zinc-800 text-sm placeholder:text-zinc-500"
+          />
+        </div>
+
+        {/* Status Filters */}
+        <div className="flex items-center gap-2 bg-zinc-900/80 p-1 rounded-xl border border-zinc-800 self-start md:self-auto">
+          {STATUS_FILTERS.map((st) => (
+            <button
+              key={st.id}
+              onClick={() => setStatusFilter(st.id)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                statusFilter === st.id
+                  ? 'bg-zinc-800 text-white shadow-sm'
+                  : 'text-zinc-400 hover:text-zinc-200'
+              }`}
+            >
+              {st.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -119,6 +189,24 @@ export function AchievementsContent() {
         })}
       </div>
 
+      {/* Empty State */}
+      {filtered.length === 0 && (
+        <div className="p-12 text-center bg-zinc-900/50 rounded-2xl border border-zinc-800">
+          <p className="text-zinc-400 text-sm">No achievements match your selected filter criteria.</p>
+          <Button
+            variant="outline"
+            className="mt-4 text-xs border-zinc-700 text-zinc-300"
+            onClick={() => {
+              setSelectedCategory('all')
+              setStatusFilter('all')
+              setSearchQuery('')
+            }}
+          >
+            Clear Filters
+          </Button>
+        </div>
+      )}
+
       {/* Achievements Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filtered.map((ach) => {
@@ -126,10 +214,11 @@ export function AchievementsContent() {
           return (
             <Card
               key={ach.id}
+              onClick={() => ach.unlocked && setCelebrationAchievement(ach)}
               className={`p-5 border flex flex-col justify-between transition-all ${
                 ach.unlocked
-                  ? 'bg-zinc-900 border-zinc-700 shadow-lg'
-                  : 'bg-zinc-950/70 border-zinc-850 opacity-70'
+                  ? 'bg-zinc-900 border-zinc-700 hover:border-zinc-600 cursor-pointer shadow-lg'
+                  : 'bg-zinc-950/70 border-zinc-850 opacity-80'
               }`}
             >
               <div>
@@ -163,22 +252,30 @@ export function AchievementsContent() {
               <div className="pt-3 border-t border-zinc-800/80 flex items-center justify-between text-xs">
                 <span className="text-[11px] text-zinc-500 font-medium">
                   {ach.unlocked ? (
-                    <span className="text-lime-400 flex items-center gap-1">
+                    <span className="text-lime-400 flex items-center gap-1 font-semibold">
                       <CheckCircle2 size={13} /> Unlocked
                     </span>
                   ) : (
                     <span>Criteria: {ach.criteriaText}</span>
                   )}
                 </span>
-                {!ach.unlocked && (
-                  <span className="text-[11px] font-mono text-zinc-600">{ach.progress}%</span>
+                {!ach.unlocked ? (
+                  <span className="text-[11px] font-mono text-zinc-500">{ach.progress}%</span>
+                ) : (
+                  <span className="text-[10px] text-zinc-500 font-mono">View Badge</span>
                 )}
               </div>
             </Card>
           )
         })}
       </div>
+
+      {/* Celebration Modal */}
+      <AchievementCelebrationModal
+        isOpen={Boolean(celebrationAchievement)}
+        achievement={celebrationAchievement}
+        onClose={() => setCelebrationAchievement(null)}
+      />
     </div>
   )
 }
-
