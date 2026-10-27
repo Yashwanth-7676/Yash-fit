@@ -219,3 +219,4 @@ export function PhotoUploadModal({ isOpen, onClose, onSaved, userId = 'demo-user
     </div>
   )
 }
+

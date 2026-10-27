@@ -113,3 +113,4 @@ CREATE POLICY "Users manage their own coach conversations"
 
 CREATE INDEX IF NOT EXISTS coach_conversations_user_created_idx
   ON public.coach_conversations (user_id, created_at ASC);
+

@@ -55,3 +55,4 @@ export interface TransformationMilestone {
   description: string
   type: 'weight' | 'waist' | 'photo' | 'streak'
 }
+

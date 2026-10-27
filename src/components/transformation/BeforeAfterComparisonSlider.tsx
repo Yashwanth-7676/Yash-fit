@@ -191,3 +191,4 @@ export function BeforeAfterComparisonSlider({ photos }: Props) {
     </div>
   )
 }
+

@@ -66,3 +66,4 @@ export interface NutritionPlanV2 {
   createdAt: string
   updatedAt: string
 }
+

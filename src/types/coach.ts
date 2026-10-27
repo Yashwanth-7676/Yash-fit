@@ -22,3 +22,4 @@ export interface CoachQueryPayload {
   message: string
   conversationHistory?: { role: 'user' | 'assistant'; content: string }[]
 }
+
