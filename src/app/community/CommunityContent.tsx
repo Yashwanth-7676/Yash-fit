@@ -24,6 +24,10 @@ import {
   Moon,
   ChevronRight,
   Filter,
+  Copy,
+  Flag,
+  ShieldAlert,
+  UserX,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, Modal, useToast } from '@/components/ui'
 import { AvatarBadge } from '@/components/rpg/AvatarBadge'
@@ -42,6 +46,13 @@ import {
   getLeaderboard,
   getUserPrivacySettings,
   saveUserPrivacySettings,
+  getFitnessGroups,
+  createFitnessGroup,
+  joinFitnessGroupByCode,
+  leaveFitnessGroup,
+  reportContent,
+  blockUser,
+  claimChallengeRewardIdempotent,
 } from '@/lib/social/socialService'
 import { getUserRpgProgress } from '@/lib/rpg/rpgService'
 import type {
@@ -50,25 +61,38 @@ import type {
   SocialActivityItem,
   LeaderboardEntry,
   UserPrivacySettings,
+  FitnessGroup,
 } from '@/types/social'
 
 export function CommunityContent() {
   const toast = useToast()
-  const [activeTab, setActiveTab] = useState<'feed' | 'challenges' | 'leaderboard' | 'friends'>('feed')
+  const [activeTab, setActiveTab] = useState<'feed' | 'challenges' | 'groups' | 'leaderboard' | 'friends'>('feed')
 
   // Search & Users state
   const [searchQuery, setSearchQuery] = useState('')
   const [usersList, setUsersList] = useState<PublicUserProfile[]>([])
 
-  // Challenges, Feed & Leaderboard state
+  // Challenges, Feed, Groups & Leaderboard state
   const [challenges, setChallenges] = useState<FitnessChallenge[]>([])
   const [feed, setFeed] = useState<SocialActivityItem[]>([])
+  const [groups, setGroups] = useState<FitnessGroup[]>([])
   const [leaderboardType, setLeaderboardType] = useState<'weekly_xp' | 'monthly_workouts' | 'streak'>('weekly_xp')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
 
   // Privacy Settings modal
   const [showPrivacyModal, setShowPrivacyModal] = useState(false)
   const [privacySettings, setPrivacySettings] = useState<UserPrivacySettings>(getUserPrivacySettings())
+
+  // Groups state & modal
+  const [showCreateGroupModal, setShowCreateGroupModal] = useState(false)
+  const [newGroupName, setNewGroupName] = useState('')
+  const [newGroupDesc, setNewGroupDesc] = useState('')
+  const [newGroupPrivate, setNewGroupPrivate] = useState(true)
+  const [joinCodeInput, setJoinCodeInput] = useState('')
+
+  // Report & Moderation modal
+  const [reportTarget, setReportTarget] = useState<{ type: 'user' | 'activity' | 'comment' | 'group'; id: string; name: string } | null>(null)
+  const [reportReason, setReportReason] = useState('Inappropriate content')
 
   // New Post input
   const [postTitle, setPostTitle] = useState('')
@@ -78,9 +102,64 @@ export function CommunityContent() {
     setUsersList(getCommunityUsers())
     setChallenges(getFitnessChallenges())
     setFeed(getActivityFeed())
+    setGroups(getFitnessGroups())
     setLeaderboard(getLeaderboard(leaderboardType))
     setPrivacySettings(getUserPrivacySettings())
   }, [leaderboardType])
+
+  const handleCreateGroup = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newGroupName.trim()) return
+    const grp = createFitnessGroup(newGroupName, newGroupDesc, newGroupPrivate)
+    setGroups(getFitnessGroups())
+    setShowCreateGroupModal(false)
+    setNewGroupName('')
+    setNewGroupDesc('')
+    toast.success('Group Created! 🛡️', `"${grp.name}" is now live. Invite code: ${grp.inviteCode}`)
+  }
+
+  const handleJoinGroupByCode = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!joinCodeInput.trim()) return
+    const res = joinFitnessGroupByCode(joinCodeInput)
+    if (res.success) {
+      toast.success('Joined Group! 🎉', res.message)
+      setGroups(getFitnessGroups())
+      setJoinCodeInput('')
+    } else {
+      toast.error('Unable to Join', res.message)
+    }
+  }
+
+  const handleLeaveGroup = (groupId: string, name: string) => {
+    leaveFitnessGroup(groupId)
+    toast.info('Left Group', `You left "${name}".`)
+    setGroups(getFitnessGroups())
+  }
+
+  const handleClaimChallengeReward = (challengeId: string) => {
+    const res = claimChallengeRewardIdempotent(challengeId)
+    if (res.success) {
+      toast.success('Reward Claimed! ⚡', res.message)
+      setChallenges(getFitnessChallenges())
+    } else {
+      toast.info('Already Claimed', res.message)
+    }
+  }
+
+  const handleReportContent = () => {
+    if (!reportTarget) return
+    reportContent(reportTarget.type, reportTarget.id, reportReason)
+    toast.success('Report Submitted', 'Our moderation team will review this report promptly.')
+    setReportTarget(null)
+  }
+
+  const handleBlockUser = (userId: string, name: string) => {
+    blockUser(userId)
+    toast.info('User Blocked', `All content from ${name} has been hidden from your feed.`)
+    setFeed(getActivityFeed())
+    setReportTarget(null)
+  }
 
   const handleSearch = (q: string) => {
     setSearchQuery(q)
@@ -183,6 +262,7 @@ export function CommunityContent() {
         {[
           { id: 'feed', label: 'Activity Feed', icon: <Share2 size={15} /> },
           { id: 'challenges', label: 'Challenges', icon: <Trophy size={15} /> },
+          { id: 'groups', label: `Fitness Groups (${groups.length})`, icon: <Shield size={15} /> },
           { id: 'leaderboard', label: 'Leaderboard', icon: <Award size={15} /> },
           { id: 'friends', label: `Companions (${myFriends.length})`, icon: <Users size={15} /> },
         ].map((tab) => {
@@ -300,6 +380,15 @@ export function CommunityContent() {
                       <span>💪</span>
                       <span>{item.flexCount}</span>
                     </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setReportTarget({ type: 'activity', id: item.id, name: `@${item.username}` })}
+                      className="ml-auto text-zinc-500 hover:text-zinc-300 p-1 rounded transition-colors"
+                      title="Report or Block"
+                    >
+                      <Flag size={13} />
+                    </button>
                   </div>
                 </Card>
               ))}
@@ -409,17 +498,124 @@ export function CommunityContent() {
                   </div>
 
                   <div className="pt-2">
-                    <Button
-                      variant={chal.isJoined ? 'outline' : 'primary'}
-                      fullWidth
-                      onClick={() => handleToggleChallenge(chal.id, chal.title)}
-                    >
-                      {chal.isJoined ? 'Leave Challenge' : 'Join Challenge'}
-                    </Button>
+                    {chal.isCompleted ? (
+                      <Badge variant="accent" className="w-full justify-center py-2 text-center">
+                        ✓ Completed &amp; Claimed (+{chal.rewardXp} XP)
+                      </Badge>
+                    ) : chal.currentProgress >= chal.targetCount ? (
+                      <Button
+                        variant="primary"
+                        fullWidth
+                        onClick={() => handleClaimChallengeReward(chal.id)}
+                      >
+                        Claim +{chal.rewardXp} XP Reward
+                      </Button>
+                    ) : (
+                      <Button
+                        variant={chal.isJoined ? 'outline' : 'primary'}
+                        fullWidth
+                        onClick={() => handleToggleChallenge(chal.id, chal.title)}
+                      >
+                        {chal.isJoined ? 'Leave Challenge' : 'Join Challenge'}
+                      </Button>
+                    )}
                   </div>
                 </Card>
               )
             })}
+          </div>
+        </div>
+      )}
+
+      {/* TAB: FITNESS GROUPS */}
+      {activeTab === 'groups' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-bold text-white">Private Fitness Groups</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Join or create private lifting squads, regional clubs, and goal-oriented circles.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" onClick={() => setShowCreateGroupModal(true)} icon={<Shield size={14} />}>
+                Create Group
+              </Button>
+            </div>
+          </div>
+
+          {/* Join with Invite Code form */}
+          <Card className="p-4 border-zinc-800 bg-zinc-900">
+            <form onSubmit={handleJoinGroupByCode} className="flex flex-col sm:flex-row items-center gap-3">
+              <div className="flex-1 w-full">
+                <Input
+                  placeholder="Enter Group Invite Code (e.g. DELHI-POWER)"
+                  value={joinCodeInput}
+                  onChange={(e) => setJoinCodeInput(e.target.value)}
+                  className="w-full"
+                />
+              </div>
+              <Button type="submit" size="sm" disabled={!joinCodeInput.trim()} className="w-full sm:w-auto">
+                Join via Code
+              </Button>
+            </form>
+          </Card>
+
+          {/* Group Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {groups.map((grp) => (
+              <Card key={grp.id} className="p-5 border-zinc-800 bg-zinc-900 flex flex-col justify-between space-y-4">
+                <div className="space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="text-sm font-bold text-white">{grp.name}</h3>
+                    <Badge variant={grp.isJoined ? 'accent' : 'default'}>
+                      {grp.role ? grp.role.toUpperCase() : grp.isPrivate ? 'PRIVATE' : 'PUBLIC'}
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-zinc-400 leading-relaxed">{grp.description}</p>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-800 space-y-3">
+                  <div className="flex items-center justify-between text-xs text-zinc-500">
+                    <span>{grp.memberCount} members</span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(grp.inviteCode)
+                        toast.success('Code Copied!', grp.inviteCode)
+                      }}
+                      className="flex items-center gap-1 text-zinc-400 hover:text-white"
+                    >
+                      <Copy size={12} /> {grp.inviteCode}
+                    </button>
+                  </div>
+                  {grp.isJoined ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      fullWidth
+                      onClick={() => handleLeaveGroup(grp.id, grp.name)}
+                    >
+                      Leave Group
+                    </Button>
+                  ) : (
+                    <Button
+                      size="sm"
+                      fullWidth
+                      onClick={() => {
+                        const res = joinFitnessGroupByCode(grp.inviteCode)
+                        if (res.success) {
+                          toast.success('Joined!', res.message)
+                          setGroups(getFitnessGroups())
+                        }
+                      }}
+                    >
+                      Join Group
+                    </Button>
+                  )}
+                </div>
+              </Card>
+            ))}
           </div>
         </div>
       )}
@@ -671,6 +867,36 @@ export function CommunityContent() {
                 className="accent-lime-400"
               />
             </label>
+
+            <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-950 border border-zinc-800 cursor-pointer">
+              <div>
+                <span className="block font-medium text-zinc-200">Keep detailed metrics private (Private by default)</span>
+                <span className="block text-[11px] text-zinc-500">Hides body weight, measurements, and progress photos from public</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={privacySettings.hideSpecificMetrics}
+                onChange={(e) =>
+                  setPrivacySettings({ ...privacySettings, hideSpecificMetrics: e.target.checked })
+                }
+                className="accent-lime-400"
+              />
+            </label>
+
+            <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-950 border border-zinc-800 cursor-pointer">
+              <div>
+                <span className="block font-medium text-zinc-200">Leaderboard Anonymity</span>
+                <span className="block text-[11px] text-zinc-500">Display as &quot;Anonymous Athlete #...&quot; instead of real username</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={privacySettings.anonymousInLeaderboard}
+                onChange={(e) =>
+                  setPrivacySettings({ ...privacySettings, anonymousInLeaderboard: e.target.checked })
+                }
+                className="accent-lime-400"
+              />
+            </label>
           </div>
 
           <div className="pt-3 flex justify-end gap-2">
@@ -680,6 +906,103 @@ export function CommunityContent() {
             <Button size="sm" onClick={handleSavePrivacy}>
               Save Privacy
             </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Create Fitness Group Modal */}
+      <Modal
+        isOpen={showCreateGroupModal}
+        onClose={() => setShowCreateGroupModal(false)}
+        title="Create Fitness Group"
+      >
+        <form onSubmit={handleCreateGroup} className="space-y-4 text-xs">
+          <div>
+            <label className="text-zinc-300 font-semibold block mb-1">Group Name</label>
+            <Input
+              placeholder="e.g. Bangalore Powerlifting Club"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <div>
+            <label className="text-zinc-300 font-semibold block mb-1">Group Description</label>
+            <Input
+              placeholder="e.g. Focused on compound progression and safe form"
+              value={newGroupDesc}
+              onChange={(e) => setNewGroupDesc(e.target.value)}
+              className="w-full"
+            />
+          </div>
+          <label className="flex items-center justify-between p-3 rounded-xl bg-zinc-950 border border-zinc-800 cursor-pointer">
+            <div>
+              <span className="block font-medium text-zinc-200">Private Group (Invite Only)</span>
+              <span className="block text-[11px] text-zinc-500">Requires secret invite code to join</span>
+            </div>
+            <input
+              type="checkbox"
+              checked={newGroupPrivate}
+              onChange={(e) => setNewGroupPrivate(e.target.checked)}
+              className="accent-lime-400"
+            />
+          </label>
+          <div className="pt-3 flex justify-end gap-2">
+            <Button variant="outline" size="sm" type="button" onClick={() => setShowCreateGroupModal(false)}>
+              Cancel
+            </Button>
+            <Button size="sm" type="submit" disabled={!newGroupName.trim()}>
+              Create Group
+            </Button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* Report & Moderation Modal */}
+      <Modal
+        isOpen={reportTarget !== null}
+        onClose={() => setReportTarget(null)}
+        title={`Report or Block ${reportTarget?.name || 'User'}`}
+      >
+        <div className="space-y-4 text-xs">
+          <p className="text-zinc-400">
+            Help keep YashFit respectful and focused on safe training habits.
+          </p>
+
+          <div>
+            <label className="text-zinc-300 font-semibold block mb-1">Reason for report</label>
+            <select
+              value={reportReason}
+              onChange={(e) => setReportReason(e.target.value)}
+              className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-lime-400"
+            >
+              <option value="Inappropriate content">Inappropriate or offensive content</option>
+              <option value="Harassment">Harassment or hostile communication</option>
+              <option value="Spam or promotional">Spam, ads, or sales pitches</option>
+              <option value="Misleading health claim">Dangerous or misleading health claims</option>
+              <option value="Other">Other policy violation</option>
+            </select>
+          </div>
+
+          <div className="pt-3 flex flex-wrap justify-between items-center gap-2 border-t border-zinc-800">
+            {reportTarget && (
+              <Button
+                variant="destructive"
+                size="sm"
+                icon={<UserX size={13} />}
+                onClick={() => handleBlockUser(reportTarget.id, reportTarget.name)}
+              >
+                Block User
+              </Button>
+            )}
+            <div className="flex gap-2 ml-auto">
+              <Button variant="outline" size="sm" onClick={() => setReportTarget(null)}>
+                Cancel
+              </Button>
+              <Button size="sm" icon={<ShieldAlert size={13} />} onClick={handleReportContent}>
+                Submit Report
+              </Button>
+            </div>
           </div>
         </div>
       </Modal>

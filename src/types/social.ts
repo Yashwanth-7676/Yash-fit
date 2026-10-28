@@ -8,6 +8,8 @@ export interface UserPrivacySettings {
   allowFriendRequests: boolean
   shareWorkoutActivity: boolean
   shareAchievements: boolean
+  hideSpecificMetrics: boolean
+  anonymousInLeaderboard: boolean
 }
 
 export interface PublicUserProfile {
@@ -116,4 +118,44 @@ export interface LeaderboardEntry {
   scoreLabel: string // e.g. "1,450 XP" or "18 Workouts"
   isCurrentUser: boolean
 }
+
+export interface FitnessGroup {
+  id: string
+  name: string
+  description: string
+  creatorId: string
+  inviteCode: string
+  isPrivate: boolean
+  memberCount: number
+  isJoined?: boolean
+  role?: 'admin' | 'moderator' | 'member'
+  createdAt: string
+}
+
+export interface GroupMember {
+  id: string
+  groupId: string
+  userId: string
+  username: string
+  avatarId: string
+  role: 'admin' | 'moderator' | 'member'
+  joinedAt: string
+}
+
+export interface SocialReport {
+  id: string
+  reporterId: string
+  targetType: 'user' | 'activity' | 'comment' | 'group'
+  targetId: string
+  reason: string
+  details?: string
+  createdAt: string
+}
+
+export interface BlockedUser {
+  userId: string
+  blockedUserId: string
+  blockedAt: string
+}
+
 

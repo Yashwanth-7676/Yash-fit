@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/client'
-import type { UserProfile } from '@/types/profile'
+import { createClient } from './supabase/client'
+import type { UserProfile } from '../types/profile'
 
 const PROFILE_STORAGE_KEY = 'yashfit_demo_profile'
 

@@ -1,10 +1,10 @@
-import { EXERCISE_DATABASE } from '@/data/exercises'
-import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
-import { INDIAN_FOOD_DATABASE } from '@/data/indianFoods'
-import { isSupabaseConfigured } from '@/lib/profileService'
-import { createClient } from '@/lib/supabase/client'
-import type { EquipmentOption, UserProfile } from '@/types/profile'
-import type { MuscleGroup, WorkoutRoutine } from '@/types/workout'
+import { EXERCISE_DATABASE } from '../data/exercises'
+import { PRESET_WORKOUT_ROUTINES } from '../data/routines'
+import { INDIAN_FOOD_DATABASE } from '../data/indianFoods'
+import { isSupabaseConfigured } from './profileService'
+import { createClient } from './supabase/client'
+import type { EquipmentOption, UserProfile } from '../types/profile'
+import type { MuscleGroup, WorkoutRoutine } from '../types/workout'
 
 export interface TwinSet {
   weightKg: number

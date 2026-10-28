@@ -8,8 +8,12 @@ import {
   CalendarDays,
   Check,
   Clock3,
+  Download,
   Dumbbell,
+  FileText,
+  GitCompare,
   HeartPulse,
+  History,
   Plus,
   Save,
   Scale,
@@ -38,6 +42,12 @@ import { EXERCISE_DATABASE } from '@/data/exercises'
 import { INDIAN_FOOD_DATABASE } from '@/data/indianFoods'
 import { getUserProfile, isSupabaseConfigured } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
+import {
+  buildUnifiedTimeline,
+  compareScenarios,
+  buildDigitalTwinExport,
+  exportTimelineToCsv,
+} from '@/lib/digitalTwin/digitalTwin2Service'
 import {
   activePlanKey,
   calculateMealBasket,
@@ -279,6 +289,43 @@ export function DigitalTwinContent() {
   const [isLoading, setIsLoading] = useState(true)
   const [message, setMessage] = useState('')
   const [errorMessage, setErrorMessage] = useState('')
+  const [activeTab, setActiveTab] = useState<'overview' | 'scenarios' | 'timeline' | 'export'>('overview')
+  const [timelineFilter, setTimelineFilter] = useState<'all' | 'workout' | 'measurement' | 'recovery'>('all')
+
+  const timelineEvents = useMemo(() => {
+    const events = buildUnifiedTimeline(userId)
+    if (timelineFilter === 'all') return events
+    return events.filter((e) => e.category === timelineFilter)
+  }, [userId, timelineFilter, workouts, measurements, recovery])
+
+  const scenarioMatrix = useMemo(() => {
+    return compareScenarios([scenarioA, scenarioB])
+  }, [scenarioA, scenarioB])
+
+  const handleExportJson = () => {
+    const data = buildDigitalTwinExport(userId)
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `yashfit-digital-twin-${new Date().toISOString().slice(0, 10)}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+    setMessage('Digital Twin JSON exported successfully.')
+  }
+
+  const handleExportCsv = () => {
+    const timeline = buildUnifiedTimeline(userId)
+    const csv = exportTimelineToCsv(timeline)
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `yashfit-timeline-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    setMessage('Unified Timeline CSV exported successfully.')
+  }
 
   useEffect(() => {
     async function loadTwin() {
@@ -699,6 +746,65 @@ export function DigitalTwinContent() {
         </div>
       </Card>
 
+      {/* Tabs for Digital Twin 2.0 */}
+      <div className="flex flex-wrap items-center gap-2 border-b border-zinc-800 pb-3" role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'overview'}
+          onClick={() => setActiveTab('overview')}
+          className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+            activeTab === 'overview'
+              ? 'bg-lime-400 text-black shadow-sm'
+              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+          }`}
+        >
+          <Activity size={14} /> Overview & Anatomy
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'scenarios'}
+          onClick={() => setActiveTab('scenarios')}
+          className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+            activeTab === 'scenarios'
+              ? 'bg-lime-400 text-black shadow-sm'
+              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+          }`}
+        >
+          <GitCompare size={14} /> Scenario Matrix Studio
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'timeline'}
+          onClick={() => setActiveTab('timeline')}
+          className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+            activeTab === 'timeline'
+              ? 'bg-lime-400 text-black shadow-sm'
+              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+          }`}
+        >
+          <History size={14} /> Unified Timeline
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'export'}
+          onClick={() => setActiveTab('export')}
+          className={`flex items-center gap-2 rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
+            activeTab === 'export'
+              ? 'bg-lime-400 text-black shadow-sm'
+              : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white'
+          }`}
+        >
+          <Download size={14} /> Data Export & Disclosures
+        </button>
+      </div>
+
+      {activeTab === 'overview' && (
+      <>
+
       <div className="grid gap-5 lg:grid-cols-2">
         <Card className="space-y-4">
           <SectionHeading title="Adaptive training guidance" subtitle="Deterministic review of your own recent workout and recovery records" />
@@ -919,12 +1025,62 @@ export function DigitalTwinContent() {
           <Link href="/nutrition" className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-lime-400">Review nutrition targets <ArrowRight size={14} /></Link>
         </div>
       </Card>
+      </>
+      )}
 
+      {activeTab === 'scenarios' && (
       <section className="space-y-4" aria-labelledby="scenario-comparison">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <SectionHeading title="Training and nutrition scenario simulator" subtitle="Compare transparent plan inputs, not predicted body changes or guaranteed outcomes" />
           <span className="text-xs text-zinc-500">Scenarios are separate from recorded history</span>
         </div>
+
+        {/* Side-by-side matrix summary */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {scenarioMatrix.metrics.map((item) => (
+            <Card key={item.scenarioId} className="border-zinc-800 bg-zinc-950/70 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-bold text-white">{item.scenarioName}</h4>
+                <Badge
+                  variant={
+                    item.projectedWeeklyStimulus === 'optimal'
+                      ? 'accent'
+                      : item.projectedWeeklyStimulus === 'high_fatigue'
+                      ? 'danger'
+                      : 'default'
+                  }
+                >
+                  {item.projectedWeeklyStimulus === 'optimal'
+                    ? 'Optimal Stimulus'
+                    : item.projectedWeeklyStimulus === 'high_fatigue'
+                    ? 'High Fatigue Risk'
+                    : item.projectedWeeklyStimulus === 'low'
+                    ? 'Low Stimulus'
+                    : 'Moderate Stimulus'}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 gap-2 text-xs text-zinc-300">
+                <div className="rounded bg-zinc-900/80 p-2">
+                  <span className="text-zinc-500 block">Weekly Volume</span>
+                  <span className="font-semibold text-white">{item.weeklyVolumeSets} working sets</span>
+                </div>
+                <div className="rounded bg-zinc-900/80 p-2">
+                  <span className="text-zinc-500 block">Training Time</span>
+                  <span className="font-semibold text-white">{item.weeklyMinutes} min / week</span>
+                </div>
+                <div className="rounded bg-zinc-900/80 p-2">
+                  <span className="text-zinc-500 block">Rest Days</span>
+                  <span className="font-semibold text-white">{item.restDays} days / week</span>
+                </div>
+                <div className="rounded bg-zinc-900/80 p-2">
+                  <span className="text-zinc-500 block">Nutrition Fuel</span>
+                  <span className="font-semibold text-white">{item.dailyCalories} kcal · {item.dailyProteinGrams}g P</span>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
         <div className="grid gap-5 xl:grid-cols-2">
           <ScenarioEditor
             scenario={scenarioA}
@@ -1017,6 +1173,112 @@ export function DigitalTwinContent() {
           <p className="mt-3 text-xs text-zinc-500">Saved scenarios are private to this browser and account key. Applying a scenario always asks for confirmation first.</p>
         </Card>
       </section>
+      )}
+
+      {activeTab === 'timeline' && (
+      <section className="space-y-4" aria-labelledby="timeline-heading">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <SectionHeading
+            title="Unified Historical Fitness Timeline"
+            subtitle="Audit trail of real recorded entries distinguished from model estimates"
+          />
+          <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-zinc-800 bg-zinc-950 p-1">
+            {(['all', 'workout', 'measurement', 'recovery'] as const).map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                onClick={() => setTimelineFilter(filter)}
+                className={`rounded-md px-3 py-1.5 text-xs font-medium capitalize transition-colors ${
+                  timelineFilter === filter
+                    ? 'bg-lime-400 text-black font-semibold'
+                    : 'text-zinc-400 hover:text-white'
+                }`}
+              >
+                {filter}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {timelineEvents.map((evt) => (
+            <Card key={evt.id} className="border-zinc-800 hover:border-zinc-700 transition-colors">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="flex items-center gap-2.5">
+                  <span className="text-xs font-mono text-zinc-500">
+                    {new Date(evt.date).toLocaleDateString(undefined, {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </span>
+                  <Badge variant={evt.isMeasured ? 'accent' : 'info'}>
+                    {evt.isMeasured ? 'Measured Actual' : 'Estimated Model'}
+                  </Badge>
+                  <Badge variant="default" className="capitalize">
+                    {evt.category}
+                  </Badge>
+                </div>
+                <span className="text-xs text-zinc-500">Source: {evt.source.replace(/_/g, ' ')}</span>
+              </div>
+              <h4 className="mt-2 text-sm font-semibold text-white">{evt.title}</h4>
+              <p className="mt-1 text-xs text-zinc-300">{evt.summary}</p>
+            </Card>
+          ))}
+          {timelineEvents.length === 0 && (
+            <Card className="text-center py-8 text-zinc-500 text-sm">
+              No fitness logs found in this category.
+            </Card>
+          )}
+        </div>
+      </section>
+      )}
+
+      {activeTab === 'export' && (
+      <section className="space-y-5" aria-labelledby="export-heading">
+        <SectionHeading
+          title="Digital Twin Data Export & Scientific Limitations"
+          subtitle="Export complete audit history and review algorithmic assumptions"
+        />
+        <div className="grid gap-5 md:grid-cols-2">
+          <Card className="space-y-3">
+            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+              <FileText size={16} className="text-lime-400" /> Export Unified Timeline (CSV)
+            </h4>
+            <p className="text-xs text-zinc-400">
+              Download your complete history of completed workouts, body measurements, and recovery entries formatted for spreadsheets.
+            </p>
+            <Button variant="outline" icon={<Download size={15} />} onClick={handleExportCsv}>
+              Download Timeline CSV
+            </Button>
+          </Card>
+          <Card className="space-y-3">
+            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+              <Download size={16} className="text-lime-400" /> Export Complete Digital Twin (JSON)
+            </h4>
+            <p className="text-xs text-zinc-400">
+              Full machine-readable bundle containing your profile targets, saved scenarios, and logged event history with explicit disclaimers.
+            </p>
+            <Button variant="primary" icon={<Download size={15} />} onClick={handleExportJson}>
+              Download Twin JSON
+            </Button>
+          </Card>
+        </div>
+
+        <Card className="border-amber-900/30 bg-amber-950/10 space-y-3">
+          <div className="flex items-center gap-2 text-amber-400">
+            <ShieldAlert size={18} />
+            <h4 className="text-sm font-semibold">Forecast Uncertainty & Scientific Disclosures</h4>
+          </div>
+          <ul className="text-xs text-zinc-400 space-y-1.5 list-disc pl-5">
+            <li>All projections are mathematical models based on recorded set tonnage and self-reported recovery check-ins; they are not physiological promises or medical guarantees.</li>
+            <li>Metabolic and caloric values do not account for non-exercise physical activity (NEAT) fluctuations or clinical metabolic variances.</li>
+            <li>Strength progression estimates require consistent biomechanics and identical equipment calibration.</li>
+            <li>YashFit never shares or sells your personal fitness telemetry without your explicit authenticated consent.</li>
+          </ul>
+        </Card>
+      </section>
+      )}
 
       <footer className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 text-xs leading-relaxed text-zinc-500">
         <Clock3 className="mr-1 inline-block" size={14} />

@@ -25,6 +25,8 @@ import {
   Box,
   Compass,
   Bot,
+  CalendarDays,
+  Watch,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -48,6 +50,12 @@ const navItems: NavItem[] = [
     href: '/command-center',
     icon: <Cpu size={18} />,
     badge: 'AI HQ',
+  },
+  {
+    label: 'Daily Plan',
+    href: '/daily-plan',
+    icon: <CalendarDays size={18} />,
+    badge: 'Agenda',
   },
   {
     label: 'AI Coach',
@@ -140,6 +148,12 @@ const navItems: NavItem[] = [
     label: 'Recovery',
     href: '/recovery',
     icon: <HeartPulse size={18} />,
+  },
+  {
+    label: 'Integrations',
+    href: '/integrations',
+    icon: <Watch size={18} />,
+    badge: 'Hub',
   },
   {
     label: 'Insights',

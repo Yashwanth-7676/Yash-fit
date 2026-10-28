@@ -812,6 +812,136 @@ CREATE POLICY "Users manage their own coach conversations"
 CREATE INDEX IF NOT EXISTS coach_conversations_user_created_idx
   ON public.coach_conversations (user_id, created_at ASC);
 
+-- ============================================================================
+-- MEGA UPGRADE PACK #17-#20 (Fitness Groups, Wearables, Daily Plans)
+-- ============================================================================
+
+CREATE TABLE IF NOT EXISTS public.fitness_groups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  description TEXT,
+  creator_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  invite_code TEXT UNIQUE NOT NULL,
+  is_private BOOLEAN NOT NULL DEFAULT true,
+  member_count INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.fitness_groups ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can view groups they created or are members of, or public groups" ON public.fitness_groups;
+CREATE POLICY "Users can view groups they created or are members of, or public groups"
+  ON public.fitness_groups
+  FOR SELECT
+  TO authenticated
+  USING (
+    NOT is_private
+    OR creator_id = auth.uid()
+    OR EXISTS (
+      SELECT 1 FROM public.group_members gm
+      WHERE gm.group_id = fitness_groups.id AND gm.user_id = auth.uid()
+    )
+  );
+
+CREATE TABLE IF NOT EXISTS public.group_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  group_id UUID NOT NULL REFERENCES public.fitness_groups(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'moderator', 'member')),
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT group_member_unique UNIQUE (group_id, user_id)
+);
+
+ALTER TABLE public.group_members ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.social_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reporter_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  target_type TEXT NOT NULL CHECK (target_type IN ('user', 'activity', 'comment', 'group')),
+  target_id TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  details TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'reviewed', 'dismissed')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.social_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.blocked_users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  blocked_user_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT blocked_user_unique UNIQUE (user_id, blocked_user_id)
+);
+
+ALTER TABLE public.blocked_users ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.wearable_connections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  provider TEXT NOT NULL CHECK (provider IN ('apple_health', 'google_health_connect', 'fitbit', 'garmin', 'whoop', 'oura', 'strava')),
+  status TEXT NOT NULL DEFAULT 'disconnected' CHECK (status IN ('connected', 'disconnected', 'error', 'pending_auth')),
+  permissions JSONB NOT NULL DEFAULT '[]'::jsonb,
+  last_sync_at TIMESTAMPTZ,
+  rate_limit_reset_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT wearable_connection_user_provider UNIQUE (user_id, provider)
+);
+
+ALTER TABLE public.wearable_connections ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.imported_wearable_metrics (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  source_provider TEXT NOT NULL,
+  metric_date DATE NOT NULL,
+  step_count INTEGER,
+  resting_heart_rate INTEGER,
+  sleep_hours NUMERIC(4, 2),
+  active_calories INTEGER,
+  raw_data JSONB,
+  imported_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT imported_wearable_user_metric UNIQUE (user_id, source_provider, metric_date)
+);
+
+ALTER TABLE public.imported_wearable_metrics ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.daily_plans (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  plan_date DATE NOT NULL,
+  status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed', 'missed')),
+  tasks JSONB NOT NULL DEFAULT '[]'::jsonb,
+  completed_task_ids JSONB NOT NULL DEFAULT '[]'::jsonb,
+  time_slots JSONB NOT NULL DEFAULT '[]'::jsonb,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT daily_plans_user_date UNIQUE (user_id, plan_date)
+);
+
+ALTER TABLE public.daily_plans ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.notification_preferences (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  quiet_hours_start TEXT NOT NULL DEFAULT '22:00',
+  quiet_hours_end TEXT NOT NULL DEFAULT '07:00',
+  timezone TEXT NOT NULL DEFAULT 'Asia/Kolkata',
+  workout_reminders BOOLEAN NOT NULL DEFAULT true,
+  meal_reminders BOOLEAN NOT NULL DEFAULT true,
+  hydration_reminders BOOLEAN NOT NULL DEFAULT true,
+  recovery_reminders BOOLEAN NOT NULL DEFAULT true,
+  push_channel_enabled BOOLEAN NOT NULL DEFAULT false,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT notification_preferences_user UNIQUE (user_id)
+);
+
+ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
+
+
 
 
 
