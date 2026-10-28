@@ -13,10 +13,7 @@ import {
   Activity,
   CheckCircle2,
   AlertCircle,
-  Eye,
-  RefreshCw,
   Sparkles,
-  Info,
 } from 'lucide-react'
 import { AnimeExerciseCanvas } from './AnimeExerciseCanvas'
 import type {
@@ -43,7 +40,7 @@ export function ExerciseVideoPlayer({
   initialAngle = 'Side',
   compact = false,
   className = '',
-  onClose,
+  onClose: _onClose,
 }: ExerciseVideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -55,14 +52,12 @@ export function ExerciseVideoPlayer({
   const [currentTime, setCurrentTime] = useState<number>(0)
   const [duration, setDuration] = useState<number>(videoMeta?.durationSeconds || 8)
   const [isMuted, setIsMuted] = useState<boolean>(true)
-  const [volume, setVolume] = useState<number>(0.8)
   const [playbackSpeed, setPlaybackSpeed] = useState<PlaybackSpeed>(1.0)
   const [cameraAngle, setCameraAngle] = useState<CameraAngle>(initialAngle)
   const [showHeatmap, setShowHeatmap] = useState<boolean>(true)
   const [showTrajectory, setShowTrajectory] = useState<boolean>(true)
   const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
   const [hasError, setHasError] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState<boolean>(false)
   const [displayMode, setDisplayMode] = useState<'anime' | 'stream'>('anime')
 
   // Check prefers-reduced-motion
@@ -284,7 +279,11 @@ export function ExerciseVideoPlayer({
               />
             ) : (
               <div className="p-4 text-center">
-                <p>Stream source currently unconfigured. Switched to Anime Kinetic Engine.</p>
+                <p>
+                  {hasError
+                    ? 'Video stream interrupted. Switched to Anime Kinetic Engine.'
+                    : 'Stream source currently unconfigured. Switched to Anime Kinetic Engine.'}
+                </p>
               </div>
             )}
           </div>

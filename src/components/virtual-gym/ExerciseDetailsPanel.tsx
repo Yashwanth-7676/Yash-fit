@@ -7,14 +7,11 @@ import {
   Dumbbell,
   AlertTriangle,
   ShieldCheck,
-  CheckCircle2,
   Copy,
   Check,
   Play,
   Camera,
   ExternalLink,
-  ChevronRight,
-  Flame,
 } from 'lucide-react'
 import { useToast } from '@/components/ui'
 

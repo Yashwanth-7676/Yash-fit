@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { WeeklyAutopilotSchedule } from '@/types/autopilot'
-import { Calendar, Clock, Activity, Dumbbell, Coffee, Sparkles, Info } from 'lucide-react'
+import { Calendar, Clock, Coffee, Info } from 'lucide-react'
 
 interface WeeklyScheduleCardProps {
   schedule: WeeklyAutopilotSchedule

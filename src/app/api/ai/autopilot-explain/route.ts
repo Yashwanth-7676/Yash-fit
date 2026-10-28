@@ -104,7 +104,7 @@ Rules:
       explanation: ruleBasedExplanation,
       providerUsed: 'rule_based',
     })
-  } catch (err) {
+  } catch (_err) {
     return NextResponse.json(
       { error: 'Internal server error processing autopilot explanation' },
       { status: 500 }

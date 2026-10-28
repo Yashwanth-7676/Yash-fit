@@ -1,5 +1,5 @@
-import type { MuscleGroup, ExerciseDifficulty, WorkoutRoutine, WorkoutExerciseItem } from './workout'
-import type { EquipmentOption, UserProfile } from './profile'
+import type { MuscleGroup, WorkoutRoutine, WorkoutExerciseItem } from './workout'
+import type { UserProfile } from './profile'
 import type { RecoveryEntry, TwinWorkout } from '@/lib/digitalTwin'
 
 export type AutopilotDecisionStatus = 'pending' | 'accepted' | 'modified' | 'dismissed' | 'undone'

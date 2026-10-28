@@ -1,4 +1,4 @@
-import type { AnimeAvatar, AnimeRank } from '@/types/rpg'
+import type { AnimeAvatar } from '@/types/rpg'
 
 export const ANIME_AVATARS: AnimeAvatar[] = [
   {

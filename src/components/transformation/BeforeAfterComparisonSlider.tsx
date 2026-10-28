@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect, useCallback } from 'react'
-import { Split, Eye, Calendar, Sparkles } from 'lucide-react'
+import { Split } from 'lucide-react'
 import type { TransformationPhoto, PoseType } from '@/types/transformation'
 
 interface Props {

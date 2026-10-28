@@ -5,12 +5,9 @@ import type { WeeklyMuscleOverview, MuscleTrainingMetric } from '@/types/virtual
 import type { MuscleGroup } from '@/types/workout'
 import {
   Activity,
-  AlertCircle,
-  CheckCircle2,
   Sparkles,
   ArrowRight,
   ShieldAlert,
-  Flame,
 } from 'lucide-react'
 
 interface MuscleIntelligenceCardProps {
@@ -26,7 +23,7 @@ export function MuscleIntelligenceCard({
   onSelectMuscle,
   onQuickExerciseSelect,
 }: MuscleIntelligenceCardProps) {
-  const { totalLoggedSets, muscleMetrics, undertrainedMuscles, wellTrainedMuscles, balancedSuggestions, disclaimer } = overview
+  const { totalLoggedSets, muscleMetrics, balancedSuggestions, disclaimer } = overview
 
   const getStatusColor = (status: MuscleTrainingMetric['status']) => {
     switch (status) {

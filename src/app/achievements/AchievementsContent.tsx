@@ -214,7 +214,7 @@ export function AchievementsContent() {
           return (
             <Card
               key={ach.id}
-              onClick={() => ach.unlocked && setCelebrationAchievement(ach)}
+              onClick={() => handleManualUnlock(ach)}
               className={`p-5 border flex flex-col justify-between transition-all ${
                 ach.unlocked
                   ? 'bg-zinc-900 border-zinc-700 hover:border-zinc-600 cursor-pointer shadow-lg'

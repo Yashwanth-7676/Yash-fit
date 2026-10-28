@@ -1,10 +1,10 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import type { ExerciseAdaptation } from '@/types/autopilot'
 import type { EquipmentOption } from '@/types/profile'
 import { findBestSubstitutions, SubstitutionOption } from '@/lib/autopilot/substitutionEngine'
-import { X, Check, Sliders, Shuffle, Dumbbell } from 'lucide-react'
+import { X, Check, Sliders, Shuffle } from 'lucide-react'
 
 interface ExerciseCustomizerModalProps {
   adaptation: ExerciseAdaptation | null
@@ -19,11 +19,19 @@ export function ExerciseCustomizerModal({
   onClose,
   onSave,
 }: ExerciseCustomizerModalProps) {
-  if (!adaptation) return null
-
-  const [sets, setSets] = useState<number>(adaptation.proposedItem.targetSets)
-  const [reps, setReps] = useState<string>(adaptation.proposedItem.targetReps)
+  const [sets, setSets] = useState<number>(adaptation?.proposedItem.targetSets ?? 3)
+  const [reps, setReps] = useState<string>(adaptation?.proposedItem.targetReps ?? '8-12')
   const [selectedSub, setSelectedSub] = useState<SubstitutionOption | null>(null)
+
+  useEffect(() => {
+    if (adaptation) {
+      setSets(adaptation.proposedItem.targetSets)
+      setReps(adaptation.proposedItem.targetReps)
+      setSelectedSub(null)
+    }
+  }, [adaptation])
+
+  if (!adaptation) return null
 
   // Find alternative substitution options
   const substitutions = findBestSubstitutions(

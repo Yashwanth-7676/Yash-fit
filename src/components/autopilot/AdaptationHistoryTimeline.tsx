@@ -2,7 +2,7 @@
 
 import React from 'react'
 import type { AutopilotAdaptationRecord } from '@/types/autopilot'
-import { History, CheckCircle2, RotateCcw, XCircle, Sliders, Calendar } from 'lucide-react'
+import { History, CheckCircle2, RotateCcw, XCircle, Sliders } from 'lucide-react'
 
 interface AdaptationHistoryTimelineProps {
   history: AutopilotAdaptationRecord[]

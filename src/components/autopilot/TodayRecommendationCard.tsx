@@ -11,14 +11,11 @@ import {
   Sliders,
   RotateCcw,
   Check,
-  X,
   Dumbbell,
   Clock,
   Shuffle,
   AlertTriangle,
   Play,
-  Heart,
-  Bot,
 } from 'lucide-react'
 
 interface TodayRecommendationCardProps {
@@ -52,7 +49,7 @@ export function TodayRecommendationCard({
     estimatedDurationMinutes,
     readinessScore,
     readinessCategory,
-    isRecoveryConstrained,
+    isRecoveryConstrained: _isRecoveryConstrained,
     overallRationale,
     dataSufficiency,
     confidenceScore,

@@ -6,7 +6,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import type { Exercise3DConfig } from '@/types/virtualGym'
 import type { MuscleGroup } from '@/types/workout'
 import { buildMannequinRig, MannequinRig } from '@/lib/virtual-gym/mannequinModel'
-import { isWebGLAvailable, disposeThreeScene, prefersReducedMotion } from '@/lib/virtual-gym/webglCheck'
+import { isWebGLAvailable, disposeThreeScene } from '@/lib/virtual-gym/webglCheck'
 import { Anatomy2DFallback } from './Anatomy2DFallback'
 import {
   Play,
@@ -47,6 +47,8 @@ export function VirtualGymViewport({
   const [activePhaseIndex, setActivePhaseIndex] = useState<number>(0)
 
   // Keep latest props in refs for raycasting event listeners without remounting scene
+  const configRef = useRef(config)
+  configRef.current = config
   const selectedMuscleRef = useRef<MuscleGroup | null | undefined>(selectedMuscle)
   selectedMuscleRef.current = selectedMuscle
   const onSelectMuscleRef = useRef<((muscle: MuscleGroup | null) => void) | undefined>(onSelectMuscle)
@@ -192,7 +194,11 @@ export function VirtualGymViewport({
     scene.add(rig.rootGroup)
 
     // Initial highlight
-    rig.highlightMuscles(config.primaryMuscles, config.secondaryMuscles, selectedMuscle)
+    rig.highlightMuscles(
+      configRef.current.primaryMuscles,
+      configRef.current.secondaryMuscles,
+      selectedMuscleRef.current
+    )
 
     // 8. Raycaster for clicking muscles
     const raycaster = new THREE.Raycaster()

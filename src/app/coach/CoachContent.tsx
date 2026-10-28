@@ -10,11 +10,9 @@ import {
   Bot,
   User,
   ArrowRight,
-  Shield,
   Layers,
   HelpCircle,
   CheckCircle2,
-  Activity,
   AlertCircle,
   RefreshCw,
 } from 'lucide-react'
@@ -136,7 +134,7 @@ export function CoachContent() {
       }
 
       saveHistory([...nextMessages, coachMsg])
-    } catch (err) {
+    } catch (_err) {
       toast.showToast({
         title: 'Error contacting AI Coach',
         message: 'Could not fetch response. Please try again.',

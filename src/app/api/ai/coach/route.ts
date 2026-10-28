@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
           user_id: authData.user.id,
           role: 'assistant',
           content: coachResponse.recommendation,
-          response_metadata: coachResponse as any,
+          response_metadata: coachResponse as unknown as Record<string, unknown>,
         })
       }
     } catch {
@@ -45,10 +45,11 @@ export async function POST(req: NextRequest) {
       success: true,
       response: coachResponse,
     })
-  } catch (err: any) {
+  } catch (err) {
+    const errorMsg = err instanceof Error ? err.message : 'Unknown error'
     console.error('Coach API Error:', err)
     return NextResponse.json(
-      { error: 'Failed to process coach query.', details: err?.message },
+      { error: 'Failed to process coach query.', details: errorMsg },
       { status: 500 }
     )
   }

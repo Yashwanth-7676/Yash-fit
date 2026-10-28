@@ -4,7 +4,7 @@ import React, { useState, useMemo } from 'react'
 import type { Exercise, MuscleGroup } from '@/types/workout'
 import type { EquipmentOption } from '@/types/profile'
 import { EXERCISE_DATABASE } from '@/data/exercises'
-import { Search, Dumbbell, Filter, Sparkles, Check, ChevronRight } from 'lucide-react'
+import { Search, Check, ChevronRight } from 'lucide-react'
 
 interface ExerciseBrowserProps {
   selectedExerciseId: string

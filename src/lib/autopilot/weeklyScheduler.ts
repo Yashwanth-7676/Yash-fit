@@ -6,11 +6,6 @@ import { PRESET_WORKOUT_ROUTINES } from '../../data/routines'
 
 const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
-const ALL_MUSCLES: MuscleGroup[] = [
-  'Chest', 'Back', 'Shoulders', 'Biceps', 'Triceps',
-  'Quads', 'Hamstrings', 'Glutes', 'Calves', 'Core',
-]
-
 /**
  * Builds an optimal 7-day schedule calibrated to user frequency and recovery requirements.
  */

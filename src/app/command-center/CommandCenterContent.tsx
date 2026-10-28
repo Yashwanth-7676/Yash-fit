@@ -22,7 +22,7 @@ import {
 import {
   PersonalRecordsList,
 } from '@/components/command-center/PersonalRecordsList'
-import { Modal, Button, Input } from '@/components/ui'
+import { Modal, Button } from '@/components/ui'
 import {
   calculateTodayFitnessStatus,
   computePersonalRecords,

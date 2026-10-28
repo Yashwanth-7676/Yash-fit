@@ -8,7 +8,6 @@ import {
   Droplet,
   ShoppingCart,
   Calendar,
-  Sparkles,
   ArrowRightLeft,
   Clock,
   CheckCircle2,

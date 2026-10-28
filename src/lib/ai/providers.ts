@@ -4,7 +4,6 @@ import type { TwinWorkout, RecoveryEntry } from '../digitalTwin'
 import type { BodyMeasurementEntry } from '../../types/transformation'
 import type { AutopilotAdaptationRecord } from '../../types/autopilot'
 import type { NutritionPlanV2 } from '../../types/nutritionPlanner'
-import { INDIAN_FOOD_DATABASE } from '../../data/indianFoods'
 
 export interface CoachUserContext {
   profile: UserProfile | null

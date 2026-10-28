@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import type { MuscleGroup } from '@/types/workout'
-import { RotateCw, ShieldCheck, Info } from 'lucide-react'
+import { RotateCw, ShieldCheck } from 'lucide-react'
 
 interface Anatomy2DFallbackProps {
   primaryMuscles: MuscleGroup[]

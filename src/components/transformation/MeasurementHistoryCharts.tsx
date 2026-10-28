@@ -15,8 +15,6 @@ import {
   TrendingUp,
   Minus,
   HelpCircle,
-  Activity,
-  Calendar,
 } from 'lucide-react'
 import { Card } from '@/components/ui'
 import {

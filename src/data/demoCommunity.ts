@@ -1,7 +1,6 @@
 import type {
   PublicUserProfile,
   SocialActivityItem,
-  LeaderboardEntry,
   InAppNotification,
 } from '@/types/social'
 

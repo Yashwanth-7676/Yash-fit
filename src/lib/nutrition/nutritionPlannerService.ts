@@ -9,9 +9,7 @@ import type {
 } from '../../types/nutritionPlanner'
 import type { UserProfile, DietaryPreference } from '../../types/profile'
 import { calculateMacroTargets } from '../nutritionCalculator'
-import { INDIAN_FOOD_DATABASE } from '../../data/indianFoods'
 import { createClient } from '../supabase/client'
-import type { FoodItem } from '../../types/nutrition'
 
 const STORAGE_KEY_PREFIX = 'yashfit_nutrition_plan_v2_'
 
@@ -809,7 +807,7 @@ export function generateWeeklyGroceryList(
 /**
  * Generates actionable meal prep strategies to prevent nutritional derailment.
  */
-export function generateMealPrepNotes(regional: RegionalPreference): MealPrepNote[] {
+export function generateMealPrepNotes(_regional: RegionalPreference): MealPrepNote[] {
   return [
     {
       dayWindow: 'Sunday Prep',
@@ -910,9 +908,9 @@ export async function createOrUpdateNutritionPlan(
           daily_carbs: macros.carbs,
           daily_fats: macros.fats,
           daily_water_liters: macros.waterLiters,
-          meals: meals as any,
-          grocery_list: groceryList as any,
-          meal_prep_notes: mealPrepNotes as any,
+          meals: meals as unknown as Record<string, unknown>[],
+          grocery_list: groceryList as unknown as Record<string, unknown>[],
+          meal_prep_notes: mealPrepNotes as unknown as Record<string, unknown>[],
           updated_at: new Date().toISOString(),
         })
       }

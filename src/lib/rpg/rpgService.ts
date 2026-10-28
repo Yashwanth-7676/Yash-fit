@@ -133,8 +133,8 @@ const STORAGE_KEYS = {
 }
 
 let inMemoryProgress: UserRpgProgress | null = null
-let inMemoryTransactions: XpTransaction[] = []
-let inMemoryEvents: string[] = []
+const inMemoryTransactions: XpTransaction[] = []
+const inMemoryEvents: string[] = []
 
 export function getInitialProgress(userId = 'demo-user'): UserRpgProgress {
   return {
@@ -324,7 +324,7 @@ export function awardXp(
  * Protects streaks so users are never penalized for responsible rest.
  */
 export function recordRestDay(
-  userId = 'demo-user',
+  _userId = 'demo-user',
   dateStr = new Date().toISOString().split('T')[0]
 ): { success: boolean; newProgress: UserRpgProgress; streakPreserved: boolean } {
   const current = getUserRpgProgress()
