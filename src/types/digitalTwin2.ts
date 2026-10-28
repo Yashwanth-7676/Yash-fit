@@ -50,3 +50,4 @@ export interface DigitalTwinExportData {
   savedScenarios: TrainingScenario[]
   timelineEvents: UnifiedTimelineEvent[]
 }
+

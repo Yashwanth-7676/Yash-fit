@@ -43,3 +43,4 @@ export interface ReminderPreferences {
   browserPushEnabled: boolean
   inAppNotifications: boolean
 }
+
