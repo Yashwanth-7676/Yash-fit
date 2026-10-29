@@ -4,12 +4,6 @@ import React, { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import {
   Search,
-  Dumbbell,
-  Filter,
-  Info,
-  ChevronRight,
-  Flame,
-  CheckCircle2,
   X,
   Star,
   Shuffle,
@@ -18,7 +12,7 @@ import {
   Camera,
   Box,
 } from 'lucide-react'
-import { Card, Badge, Button, Input, SectionHeading, useToast } from '@/components/ui'
+import { Card, Badge, Button, Input, useToast } from '@/components/ui'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import type { Exercise, MuscleGroup } from '@/types/workout'

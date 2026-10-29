@@ -1,4 +1,3 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
 import { Clock, ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui'

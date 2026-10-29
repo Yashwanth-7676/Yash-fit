@@ -2,14 +2,10 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import {
-  ShoppingCart,
-  CheckCircle2,
   Plus,
   Trash2,
   RotateCcw,
-  Sparkles,
   Check,
-  Tag,
   SlidersHorizontal,
   Download,
 } from 'lucide-react'
@@ -90,13 +86,6 @@ export function GroceryPlannerContent() {
     const updated = items.filter((item) => item.id !== id)
     saveItems(updated)
     toast.info('Item removed from shopping list')
-  }
-
-  const handleUpdatePrice = (id: string, newCost: number) => {
-    const updated = items.map((item) =>
-      item.id === id ? { ...item, estimatedCostInr: newCost } : item
-    )
-    saveItems(updated)
   }
 
   const handleAddItem = (e: React.FormEvent) => {

@@ -2,16 +2,14 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Card, Badge, Button, Input } from '@/components/ui'
+import { Card, Badge, Button } from '@/components/ui'
 import {
-  Sparkles,
   Send,
   Bot,
   User,
   ArrowRight,
   Info,
   Dumbbell,
-  HelpCircle,
   Lightbulb,
   Utensils,
   TrendingUp,

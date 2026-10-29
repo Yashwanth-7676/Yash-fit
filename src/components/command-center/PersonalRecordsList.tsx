@@ -3,7 +3,7 @@
 import React from 'react'
 import Link from 'next/link'
 import { Card, Badge } from '@/components/ui'
-import { Trophy, Award, Flame, Dumbbell, ArrowRight } from 'lucide-react'
+import { Trophy, Flame, Dumbbell, ArrowRight } from 'lucide-react'
 import type { PersonalRecordItem } from '@/types/commandCenter'
 
 interface PersonalRecordsListProps {

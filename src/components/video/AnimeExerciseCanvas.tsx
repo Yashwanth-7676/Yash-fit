@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useRef, useEffect, useState, useCallback } from 'react'
+import React, { useRef, useEffect, useCallback } from 'react'
 import type { MotionCycleKey, CameraAngle, MuscleGroup } from '@/types/workout'
 
 interface AnimeExerciseCanvasProps {
@@ -46,9 +46,6 @@ export function AnimeExerciseCanvas({
   const localTimeRef = useRef<number>(currentTime)
   const completedRepsRef = useRef<number>(0)
   const trajectoryPointsRef = useRef<{ x: number; y: number; opacity: number }[]>([])
-
-  const [currentPhase, setCurrentPhase] = useState<'Eccentric (Lowering)' | 'Isometric (Pause)' | 'Concentric (Drive)'>('Concentric (Drive)')
-  const [repCount, setRepCount] = useState<number>(0)
 
   // Keep local time synced when parent scrubs seekbar while paused
   useEffect(() => {
@@ -116,8 +113,6 @@ export function AnimeExerciseCanvas({
         movementFactor = 1.0 - easeInOutSine(p)
         phaseText = 'Concentric (Drive)'
       }
-
-      setCurrentPhase(phaseText)
 
       // Base coordinate anchor for athlete
       const centerX = width * 0.5
@@ -706,7 +701,6 @@ export function AnimeExerciseCanvas({
         if (localTimeRef.current >= duration) {
           localTimeRef.current = 0
           completedRepsRef.current += 1
-          setRepCount(completedRepsRef.current)
           onCycleComplete?.(completedRepsRef.current)
         }
         onTimeUpdate?.(localTimeRef.current)
@@ -743,7 +737,7 @@ export function AnimeExerciseCanvas({
       <canvas
         ref={canvasRef}
         className="w-full h-full block"
-        aria-label={`Anime animated demonstration for ${exerciseName} showing ${currentPhase}`}
+        aria-label={`Anime animated demonstration for ${exerciseName}`}
       />
     </div>
   )

@@ -1,28 +1,24 @@
 'use client'
 
 import React, { useState, useMemo } from 'react'
-import { Card, Badge, Button } from '@/components/ui'
+import { Card, Badge } from '@/components/ui'
 import {
   TrendingUp,
-  Calendar,
-  Sparkles,
   Info,
   Activity,
-  Layers,
   ArrowUpRight,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
   AreaChart,
   Area,
-  LineChart,
   Line,
   XAxis,
   YAxis,
   Tooltip,
   CartesianGrid,
 } from 'recharts'
-import type { TrendHorizon, TrendForecastPoint, StrengthProgressionItem } from '@/types/commandCenter'
+import type { TrendHorizon, StrengthProgressionItem } from '@/types/commandCenter'
 import { computeTrendForecastPoints } from '@/lib/command-center/commandCenterService'
 import type { TwinWorkout } from '@/lib/digitalTwin'
 

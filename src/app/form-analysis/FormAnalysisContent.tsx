@@ -1,20 +1,14 @@
 'use client'
 
 import React, { useState } from 'react'
-import Link from 'next/link'
 import {
   Camera,
-  Activity,
   CheckCircle2,
   AlertTriangle,
-  ShieldCheck,
   Video,
-  Sparkles,
   Info,
-  ChevronRight,
-  RotateCcw,
 } from 'lucide-react'
-import { Card, Badge, Button, SectionHeading } from '@/components/ui'
+import { Card, Badge } from '@/components/ui'
 import { PoseCameraFeed } from '@/components/vision/PoseCameraFeed'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
 import { EXERCISE_FORM_CONFIGS } from '@/lib/vision/exerciseRules'

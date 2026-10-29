@@ -2,9 +2,8 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Card, Badge, Button } from '@/components/ui'
+import { Card, Badge } from '@/components/ui'
 import {
-  Activity,
   HeartPulse,
   Droplet,
   Utensils,
@@ -13,7 +12,6 @@ import {
   Moon,
   Sparkles,
   ArrowRight,
-  ShieldCheck,
   CheckCircle2,
 } from 'lucide-react'
 import type { TodayFitnessStatus } from '@/types/commandCenter'

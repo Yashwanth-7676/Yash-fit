@@ -7,23 +7,14 @@ import {
   Flame,
   Search,
   UserPlus,
-  UserCheck,
   Check,
   X,
   Share2,
   ThumbsUp,
   Shield,
-  Lock,
-  Eye,
   Settings,
-  Sparkles,
   Award,
   Clock,
-  Dumbbell,
-  Droplet,
-  Moon,
-  ChevronRight,
-  Filter,
   Copy,
   Flag,
   ShieldAlert,
@@ -54,7 +45,6 @@ import {
   blockUser,
   claimChallengeRewardIdempotent,
 } from '@/lib/social/socialService'
-import { getUserRpgProgress } from '@/lib/rpg/rpgService'
 import type {
   PublicUserProfile,
   FitnessChallenge,
@@ -62,6 +52,7 @@ import type {
   LeaderboardEntry,
   UserPrivacySettings,
   FitnessGroup,
+  ProfileVisibility,
 } from '@/types/social'
 
 export function CommunityContent() {
@@ -270,7 +261,7 @@ export function CommunityContent() {
           return (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`px-4 py-3 text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer flex items-center gap-2 border-b-2 -mb-px ${
                 isSelected
                   ? 'border-lime-400 text-lime-400'
@@ -632,7 +623,7 @@ export function CommunityContent() {
               ].map((btn) => (
                 <button
                   key={btn.id}
-                  onClick={() => setLeaderboardType(btn.id as any)}
+                  onClick={() => setLeaderboardType(btn.id as typeof leaderboardType)}
                   className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
                     leaderboardType === btn.id
                       ? 'bg-lime-400 text-zinc-950 border-lime-400 shadow-sm'
@@ -822,7 +813,7 @@ export function CommunityContent() {
               <select
                 value={privacySettings.profileVisibility}
                 onChange={(e) =>
-                  setPrivacySettings({ ...privacySettings, profileVisibility: e.target.value as any })
+                  setPrivacySettings({ ...privacySettings, profileVisibility: e.target.value as ProfileVisibility })
                 }
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-lime-400"
               >

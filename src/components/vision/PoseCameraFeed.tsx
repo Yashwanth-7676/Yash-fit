@@ -11,13 +11,10 @@ import {
   Volume2,
   VolumeX,
   ShieldCheck,
-  Activity,
-  Flame,
   CheckCircle2,
 } from 'lucide-react'
-import { Button, Card, Badge } from '@/components/ui'
+import { Button } from '@/components/ui'
 import {
-  LANDMARK_INDEX,
   SKELETON_CONNECTIONS,
   extractJointAngles,
   checkFullBodyVisibility,
@@ -32,7 +29,6 @@ import type {
   SupportedVisionExercise,
   PoseLandmark,
   FormAnalysisResult,
-  JointAngles,
 } from '@/types/pose'
 
 interface PoseCameraFeedProps {

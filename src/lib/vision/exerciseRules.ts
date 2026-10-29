@@ -107,7 +107,7 @@ export interface MovementTrackerState {
   partialRepsCount: number
 }
 
-export function createInitialTrackerState(exercise: SupportedVisionExercise): MovementTrackerState {
+export function createInitialTrackerState(_exercise: SupportedVisionExercise): MovementTrackerState {
   return {
     currentPhase: 'READY',
     lowestAngleReached: 180,

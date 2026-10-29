@@ -4,12 +4,10 @@ import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import {
   Bell,
-  CheckCircle2,
   Users,
   Award,
   Zap,
   ChevronRight,
-  X,
 } from 'lucide-react'
 import {
   getNotifications,

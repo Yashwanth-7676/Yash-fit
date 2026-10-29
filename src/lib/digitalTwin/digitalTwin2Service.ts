@@ -157,10 +157,15 @@ export function compareScenarios(scenarios: TrainingScenario[]): ScenarioCompari
   return { scenarios, metrics }
 }
 
-export function buildUnifiedTimeline(userId = 'demo-user'): UnifiedTimelineEvent[] {
-  const workouts = readArray<TwinWorkout>(workoutHistoryKey(userId))
-  const measurements = readArray<BodyMeasurement>(measurementHistoryKey(userId))
-  const recoveryEntries = readArray<RecoveryEntry>(recoveryHistoryKey(userId))
+export function buildUnifiedTimeline(
+  userId = 'demo-user',
+  customWorkouts?: TwinWorkout[],
+  customMeasurements?: BodyMeasurement[],
+  customRecovery?: RecoveryEntry[]
+): UnifiedTimelineEvent[] {
+  const workouts = customWorkouts ?? readArray<TwinWorkout>(workoutHistoryKey(userId))
+  const measurements = customMeasurements ?? readArray<BodyMeasurement>(measurementHistoryKey(userId))
+  const recoveryEntries = customRecovery ?? readArray<RecoveryEntry>(recoveryHistoryKey(userId))
 
   const events: UnifiedTimelineEvent[] = []
 

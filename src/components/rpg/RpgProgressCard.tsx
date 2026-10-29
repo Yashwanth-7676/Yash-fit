@@ -7,12 +7,9 @@ import {
   Flame,
   Award,
   ChevronRight,
-  Sparkles,
   Target,
-  Crown,
-  Shield,
 } from 'lucide-react'
-import { Card, Badge, Button } from '@/components/ui'
+import { Card } from '@/components/ui'
 import { AvatarBadge } from './AvatarBadge'
 import {
   getUserRpgProgress,

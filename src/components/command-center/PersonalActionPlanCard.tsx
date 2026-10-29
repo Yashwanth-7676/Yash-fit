@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { Card, Badge, Button } from '@/components/ui'
+import { Card, Badge } from '@/components/ui'
 import {
   CheckSquare,
   Square,
@@ -14,7 +14,6 @@ import {
   Target,
   Scale,
   ArrowRight,
-  Sparkles,
 } from 'lucide-react'
 import type { DailyActionItem } from '@/types/commandCenter'
 import { toggleDailyAction } from '@/lib/command-center/commandCenterService'
@@ -125,6 +124,7 @@ export function PersonalActionPlanCard({
 
                 <div className="space-y-0.5 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
+                    {getCategoryIcon(item.category)}
                     <span
                       className={`text-xs font-semibold tracking-tight ${
                         item.completed ? 'line-through text-zinc-500' : 'text-white'

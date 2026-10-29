@@ -36,7 +36,6 @@ export function AdaptiveRecommendationCard({
 
   const isRecoveryDay = recommendation.recommendationType === 'recovery_day'
   const isReducedVolume = recommendation.recommendationType === 'reduce_intensity'
-  const isSubstitution = recommendation.recommendationType === 'substitute_exercise'
 
   const borderGlow = isRecoveryDay
     ? 'border-amber-400/30 bg-gradient-to-br from-zinc-900 via-amber-950/10 to-zinc-900'

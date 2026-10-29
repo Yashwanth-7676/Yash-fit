@@ -180,7 +180,7 @@ export function DailyPlanContent() {
         ].map((btn) => (
           <button
             key={btn.id}
-            onClick={() => setFilterCategory(btn.id as any)}
+            onClick={() => setFilterCategory(btn.id as typeof filterCategory)}
             className={`px-3.5 py-2 text-xs font-bold transition-all whitespace-nowrap cursor-pointer rounded-xl border ${
               filterCategory === btn.id
                 ? 'bg-lime-400 text-zinc-950 border-lime-400 shadow-sm'

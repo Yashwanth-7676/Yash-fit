@@ -293,7 +293,7 @@ export function DigitalTwinContent() {
   const [timelineFilter, setTimelineFilter] = useState<'all' | 'workout' | 'measurement' | 'recovery'>('all')
 
   const timelineEvents = useMemo(() => {
-    const events = buildUnifiedTimeline(userId)
+    const events = buildUnifiedTimeline(userId, workouts, measurements, recovery)
     if (timelineFilter === 'all') return events
     return events.filter((e) => e.category === timelineFilter)
   }, [userId, timelineFilter, workouts, measurements, recovery])
