@@ -3,21 +3,29 @@
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
-  Box,
   Palette,
   Users,
-  Sparkles,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
   Plus,
-  Play,
-  RotateCcw,
-  Sliders,
-  Layers,
 } from 'lucide-react'
+import dynamic from 'next/dynamic'
 import { Card, Badge, Button, Input, Modal, useToast } from '@/components/ui'
-import { VirtualFitnessWorldViewport } from '@/components/virtual-world/VirtualFitnessWorldViewport'
+
+const VirtualFitnessWorldViewport = dynamic(
+  () =>
+    import('@/components/virtual-world/VirtualFitnessWorldViewport').then(
+      (mod) => mod.VirtualFitnessWorldViewport
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-full h-[520px] rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col items-center justify-center text-zinc-500 gap-3">
+        <div className="w-8 h-8 rounded-full border-2 border-lime-400 border-t-transparent animate-spin" />
+        <span className="text-xs font-medium text-zinc-400">Loading 3D Fitness World...</span>
+      </div>
+    ),
+  }
+)
 import {
   getAvatarConfig,
   saveAvatarConfig,
@@ -30,7 +38,6 @@ import type {
   EnvironmentPreset,
   TrainingStation,
   MultiplayerRoom,
-  AvatarAnimationPose,
 } from '@/types/virtualWorld'
 
 const COLOR_PRESETS = [

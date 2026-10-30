@@ -16,7 +16,7 @@ import { getUserProfile } from '@/lib/profileService'
 import { ExerciseBrowser } from '@/components/virtual-gym/ExerciseBrowser'
 import { ExerciseDetailsPanel } from '@/components/virtual-gym/ExerciseDetailsPanel'
 import { MuscleIntelligenceCard } from '@/components/virtual-gym/MuscleIntelligenceCard'
-import { Box, Layers, RotateCcw, ArrowLeft, Play, Dumbbell, Activity, Cpu } from 'lucide-react'
+import { Box, Layers, Cpu } from 'lucide-react'
 
 // Dynamically import 3D Viewport with SSR disabled to prevent WebGL/Window hydration issues
 const VirtualGymViewport = dynamic(
@@ -57,7 +57,6 @@ export function VirtualGymContent() {
   // Telemetry state
   const [workouts, setWorkouts] = useState<TwinWorkout[]>([])
   const [profile, setProfile] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   // Load telemetry
   useEffect(() => {
@@ -90,8 +89,6 @@ export function VirtualGymContent() {
         }
       } catch (err) {
         console.warn('Error loading telemetry for virtual gym:', err)
-      } finally {
-        setIsLoading(false)
       }
     }
     loadData()

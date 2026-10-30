@@ -3,11 +3,9 @@ import type {
   ArenaLeaderboardEntry,
   PersonalArenaHistory,
   ArenaScoringRule,
-  EligibilityTier,
 } from '../../types/arena'
 
 const LOCAL_STORAGE_REGISTRATIONS_KEY = 'yashfit_arena_registrations'
-const LOCAL_STORAGE_SUBMISSIONS_KEY = 'yashfit_arena_event_submissions'
 const LOCAL_STORAGE_REPORTS_KEY = 'yashfit_arena_moderation_reports'
 
 export const PRESET_ARENA_COMPETITIONS: ArenaCompetition[] = [

@@ -3,19 +3,10 @@
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import {
-  Lightbulb,
-  Sparkles,
-  TrendingUp,
   Brain,
-  Zap,
-  Target,
   ArrowRight,
-  ShieldAlert,
-  Dumbbell,
-  CheckCircle2,
-  Clock,
 } from 'lucide-react'
-import { Card, Badge, Button, SectionHeading } from '@/components/ui'
+import { Card, Badge, Button } from '@/components/ui'
 import { getUserProfile } from '@/lib/profileService'
 import { isSupabaseConfigured } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'

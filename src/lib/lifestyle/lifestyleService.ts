@@ -7,7 +7,7 @@ import type {
 import type { CoachUserContext } from '../ai/providers'
 
 const LOCAL_STORAGE_SCHEDULE_KEY = 'yashfit_lifestyle_schedule'
-const LOCAL_STORAGE_CONSTRAINTS_KEY = 'yashfit_lifestyle_constraints'
+export const LOCAL_STORAGE_CONSTRAINTS_KEY = 'yashfit_lifestyle_constraints'
 
 const inMemorySchedules: Record<string, DailyLifestyleSchedule> = {}
 

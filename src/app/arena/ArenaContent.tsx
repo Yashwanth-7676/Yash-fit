@@ -2,21 +2,14 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import {
-  Trophy,
   Users,
   Calendar,
-  Flame,
   ShieldCheck,
-  Award,
   RefreshCw,
-  Search,
   CheckCircle2,
-  AlertTriangle,
   Flag,
-  UserCheck,
   UserPlus,
   ArrowRight,
-  Info,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, Modal, useToast } from '@/components/ui'
 import {

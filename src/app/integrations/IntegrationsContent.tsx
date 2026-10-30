@@ -2,25 +2,16 @@
 
 import React, { useState, useEffect } from 'react'
 import {
-  Watch,
   Activity,
-  Heart,
-  Moon,
   Upload,
-  CheckCircle2,
-  AlertCircle,
   Trash2,
-  ExternalLink,
   ShieldCheck,
-  FileSpreadsheet,
   RefreshCw,
-  Info,
 } from 'lucide-react'
 import { Card, Badge, Button, Modal, useToast } from '@/components/ui'
 import {
   getWearableProviders,
   getWearableMetrics,
-  saveWearableStatus,
   disconnectWearable,
   clearWearableMetrics,
   parseHealthExportData,

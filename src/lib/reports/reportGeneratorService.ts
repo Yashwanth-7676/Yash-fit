@@ -1,6 +1,5 @@
 import type {
   FitnessReport,
-  ReportType,
   ReportMetricItem,
   ReportChartPoint,
   ReportPersonalRecord,

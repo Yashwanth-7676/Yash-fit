@@ -6,19 +6,12 @@ import {
   Dumbbell,
   Play,
   Clock,
-  Flame,
-  Target,
-  Sparkles,
-  ChevronRight,
-  RotateCcw,
-  CheckCircle2,
   PlayCircle,
   X,
-  Video,
   Box,
   Compass,
 } from 'lucide-react'
-import { Card, Badge, Button, SectionHeading } from '@/components/ui'
+import { Card, Badge, Button, LoadingSpinner } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES, getRecommendedRoutineForProfile } from '@/data/routines'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
@@ -26,10 +19,8 @@ import { getUserProfile } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
 import { activePlanKey, applyExerciseOverrides, getFitnessUserId } from '@/lib/digitalTwin'
 import type { WorkoutRoutine, Exercise } from '@/types/workout'
-import type { UserProfile } from '@/types/profile'
 
 export function WorkoutPlannerContent() {
-  const [profile, setProfile] = useState<UserProfile | null>(null)
   const [selectedRoutine, setSelectedRoutine] = useState<WorkoutRoutine>(PRESET_WORKOUT_ROUTINES[0])
   const [previewExercise, setPreviewExercise] = useState<Exercise | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -44,7 +35,6 @@ export function WorkoutPlannerContent() {
         const { data } = await supabase.auth.getUser()
         const userId = data?.user?.id || 'demo-user'
         const p = await getUserProfile(userId)
-        setProfile(p)
         const recommended = getRecommendedRoutineForProfile(p)
         let routine = recommended
         try {
@@ -74,6 +64,14 @@ export function WorkoutPlannerContent() {
     }
     loadData()
   }, [])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-[350px]">
+        <LoadingSpinner size="lg" label="Loading workout routines..." />
+      </div>
+    )
+  }
 
   return (
     <div className="max-w-7xl mx-auto space-y-8">

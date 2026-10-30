@@ -3,11 +3,9 @@
 import React, { useState, useEffect, useMemo } from 'react'
 import {
   Clock,
-  Calendar,
   CheckCircle2,
   Circle,
   Sparkles,
-  AlertCircle,
   Droplets,
   Dumbbell,
   Utensils,
@@ -15,10 +13,7 @@ import {
   HeartPulse,
   Briefcase,
   Settings,
-  ChevronRight,
-  ShieldAlert,
   ArrowRight,
-  RotateCcw,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, Modal, useToast } from '@/components/ui'
 import {
@@ -28,12 +23,12 @@ import {
   toggleLifestyleSlotCompletion,
   applyProposalDecision,
   DEFAULT_USER_CONSTRAINTS,
+  LOCAL_STORAGE_CONSTRAINTS_KEY,
 } from '@/lib/lifestyle/lifestyleService'
 import { buildCoachContext } from '@/lib/ai/coachContextService'
 import type { CoachUserContext } from '@/lib/ai/providers'
 import type {
   DailyLifestyleSchedule,
-  LifestyleTimeSlot,
   TimeSlotCategory,
   UserTimeConstraint,
 } from '@/types/lifestyle'
@@ -89,7 +84,7 @@ export function LifestyleContent() {
 
       // Load saved constraints
       try {
-        const raw = localStorage.getItem('yashfit_lifestyle_constraints')
+        const raw = localStorage.getItem(LOCAL_STORAGE_CONSTRAINTS_KEY)
         if (raw) {
           const parsed = JSON.parse(raw)
           setConstraints(parsed)
@@ -130,7 +125,7 @@ export function LifestyleContent() {
   const handleSaveConstraints = () => {
     setConstraints(tempConstraints)
     try {
-      localStorage.setItem('yashfit_lifestyle_constraints', JSON.stringify(tempConstraints))
+      localStorage.setItem(LOCAL_STORAGE_CONSTRAINTS_KEY, JSON.stringify(tempConstraints))
     } catch {
       // fallback
     }
@@ -199,7 +194,10 @@ export function LifestyleContent() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setIsSettingsOpen(true)}
+            onClick={() => {
+              setTempConstraints(constraints)
+              setIsSettingsOpen(true)
+            }}
             icon={<Settings className="w-4 h-4" />}
           >
             Preferences

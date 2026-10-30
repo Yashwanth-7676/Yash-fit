@@ -18,9 +18,6 @@ import {
   Copy,
   CheckCircle2,
   Activity,
-  HeartPulse,
-  Flame,
-  Info,
 } from 'lucide-react'
 import {
   ResponsiveContainer,

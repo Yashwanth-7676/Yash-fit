@@ -1,14 +1,13 @@
 'use client'
 
-import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import React, { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   Timer,
   CheckCircle2,
   Play,
   Pause,
-  RotateCcw,
   Plus,
   Trash2,
   Award,
@@ -16,15 +15,13 @@ import {
   Flame,
   Check,
   FastForward,
-  TrendingUp,
   Video,
   ChevronDown,
   ChevronUp,
   Camera,
   Box,
 } from 'lucide-react'
-import { YashFitLogo } from '@/components/YashFitLogo'
-import { Button, Card, Input, Badge, useToast } from '@/components/ui'
+import { Button, Card, Badge, useToast } from '@/components/ui'
 import { PRESET_WORKOUT_ROUTINES } from '@/data/routines'
 import { EXERCISE_DATABASE } from '@/data/exercises'
 import { ExerciseVideoPlayer } from '@/components/video/ExerciseVideoPlayer'
@@ -33,7 +30,7 @@ import { publishActivity } from '@/lib/social/socialService'
 import { applyExerciseOverrides, getFitnessUserId, workoutHistoryKey } from '@/lib/digitalTwin'
 import { isSupabaseConfigured } from '@/lib/profileService'
 import { createClient } from '@/lib/supabase/client'
-import type { WorkoutRoutine, CompletedExerciseLog, CompletedSetLog, Exercise } from '@/types/workout'
+import type { WorkoutRoutine, CompletedSetLog, Exercise } from '@/types/workout'
 
 function isMatchingRoutineDraft(draft: unknown, routine: WorkoutRoutine): boolean {
   if (!draft || typeof draft !== 'object') return false
@@ -47,7 +44,6 @@ function isMatchingRoutineDraft(draft: unknown, routine: WorkoutRoutine): boolea
 }
 
 export function WorkoutSessionTracker() {
-  const router = useRouter()
   const toast = useToast()
   const searchParams = useSearchParams()
   const routineId = searchParams.get('routineId') || 'routine-push-day'
@@ -124,7 +120,7 @@ export function WorkoutSessionTracker() {
     } catch {
       // ignore
     }
-  }, [routineId])
+  }, [routineId, selectedRoutine, toast])
 
   // Sync draft to sessionStorage on every change
   useEffect(() => {
@@ -188,7 +184,7 @@ export function WorkoutSessionTracker() {
     return () => {
       if (timer) clearInterval(timer)
     }
-  }, [isResting, isRestPaused, restRemaining])
+  }, [isResting, isRestPaused, restRemaining, toast])
 
   const formatTime = (secs: number) => {
     const m = Math.floor(secs / 60)

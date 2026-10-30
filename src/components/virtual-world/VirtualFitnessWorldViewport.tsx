@@ -12,15 +12,12 @@ import type {
 } from '@/types/virtualWorld'
 import {
   RotateCcw,
-  Sparkles,
   Maximize2,
   Minimize2,
   Box,
-  Layers,
   ArrowRight,
-  ShieldCheck,
 } from 'lucide-react'
-import { Badge, Button } from '@/components/ui'
+import { Button } from '@/components/ui'
 
 interface VirtualFitnessWorldViewportProps {
   avatarConfig: AvatarAppearanceConfig
@@ -351,7 +348,7 @@ export function VirtualFitnessWorldViewport({
     resizeObserver.observe(container)
 
     // 11. Animation Loop
-    let clock = new THREE.Clock()
+    const clock = new THREE.Clock()
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate)
       const elapsed = clock.getElapsedTime()
