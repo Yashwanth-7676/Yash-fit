@@ -27,6 +27,8 @@ import {
   Bot,
   CalendarDays,
   Watch,
+  Share2,
+  Trophy,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -64,6 +66,12 @@ const navItems: NavItem[] = [
     badge: 'AI 2.0',
   },
   {
+    label: 'Virtual Trainer',
+    href: '/virtual-coach',
+    icon: <Bot size={18} />,
+    badge: 'Voice',
+  },
+  {
     label: 'Workout',
     href: '/workout',
     icon: <Dumbbell size={18} />,
@@ -90,6 +98,24 @@ const navItems: NavItem[] = [
     href: '/form-analysis',
     icon: <Camera size={18} />,
     badge: 'AI',
+  },
+  {
+    label: 'Biomechanics',
+    href: '/biomechanics',
+    icon: <Activity size={18} />,
+    badge: 'Vision',
+  },
+  {
+    label: 'Performance Lab',
+    href: '/performance-lab',
+    icon: <Trophy size={18} />,
+    badge: 'Lab',
+  },
+  {
+    label: 'Fitness Graph',
+    href: '/fitness-intelligence',
+    icon: <Share2 size={18} />,
+    badge: 'Graph',
   },
   {
     label: 'Community',

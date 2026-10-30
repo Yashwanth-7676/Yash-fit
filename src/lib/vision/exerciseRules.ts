@@ -95,6 +95,24 @@ export const EXERCISE_FORM_CONFIGS: Record<SupportedVisionExercise, ExerciseForm
       minDepthTolerance: 75,
     },
   },
+  shoulder_press: {
+    id: 'shoulder_press',
+    name: 'Overhead Shoulder Press',
+    recommendedDistance: '5 - 7 feet',
+    recommendedAngle: 'Front or 45° angle',
+    cues: [
+      'Start with weights at clavicle/shoulder level, elbows around 90°',
+      'Press directly overhead to full arm lockout (>160°)',
+      'Keep core braced and ribs down; avoid hyperextending lumbar spine',
+      'Lower weights under control back to shoulder level',
+    ],
+    criteria: {
+      readyAngle: 90,
+      targetDepthAngle: 160,
+      minDepthTolerance: 145,
+      maxLeanAngle: 20,
+    },
+  },
 }
 
 export interface MovementTrackerState {
@@ -406,6 +424,78 @@ export function analyzeMovementFrame(
           }
           nextState.currentPhase = 'READY'
           nextState.lowestAngleReached = 180
+          nextState.hitBottomDepth = false
+        }
+      }
+      break
+    }
+
+    case 'shoulder_press': {
+      const elbow = angles.elbowAngle
+      const torso = angles.torsoAngle
+
+      if (elbow > nextState.highestAngleReached) {
+        nextState.highestAngleReached = elbow
+      }
+
+      if (torso > (config.criteria.maxLeanAngle || 20)) {
+        feedback.push({
+          id: 'excessive_arch',
+          message: 'Avoid arching lower back. Brace your glutes and core.',
+          severity: 'warning',
+          timestamp: Date.now(),
+          joint: 'Spine',
+        })
+        formScore -= 15
+      }
+
+      if (elbow >= config.criteria.targetDepthAngle) {
+        nextState.hitBottomDepth = true
+      }
+
+      if (nextState.currentPhase === 'READY' || nextState.currentPhase === 'COMPLETED') {
+        if (elbow > 115) {
+          nextState.currentPhase = 'CONCENTRIC'
+          nextState.highestAngleReached = elbow
+        }
+      } else if (nextState.currentPhase === 'CONCENTRIC') {
+        if (elbow >= config.criteria.targetDepthAngle) {
+          nextState.currentPhase = 'BOTTOM_INFLECTION'
+          feedback.push({
+            id: 'overhead_lockout',
+            message: 'Full overhead lockout achieved. Lower with control.',
+            severity: 'good',
+            timestamp: Date.now(),
+          })
+        } else if (elbow < nextState.highestAngleReached - 20 && !nextState.hitBottomDepth) {
+          nextState.currentPhase = 'ECCENTRIC'
+        }
+      } else if (nextState.currentPhase === 'BOTTOM_INFLECTION') {
+        if (elbow <= 105) {
+          if (nextState.hitBottomDepth) {
+            repCompleted = true
+            nextState.repsCount += 1
+          } else {
+            isPartialRep = true
+            nextState.partialRepsCount += 1
+          }
+          nextState.currentPhase = 'READY'
+          nextState.highestAngleReached = 90
+          nextState.hitBottomDepth = false
+        } else if (elbow < 150) {
+          nextState.currentPhase = 'ECCENTRIC'
+        }
+      } else if (nextState.currentPhase === 'ECCENTRIC') {
+        if (elbow <= 105) {
+          if (nextState.hitBottomDepth) {
+            repCompleted = true
+            nextState.repsCount += 1
+          } else {
+            isPartialRep = true
+            nextState.partialRepsCount += 1
+          }
+          nextState.currentPhase = 'READY'
+          nextState.highestAngleReached = 90
           nextState.hitBottomDepth = false
         }
       }

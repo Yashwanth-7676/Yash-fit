@@ -5,7 +5,7 @@ export interface PoseLandmark {
   visibility?: number
 }
 
-export type SupportedVisionExercise = 'squat' | 'push_up' | 'lunge' | 'plank' | 'bicep_curl'
+export type SupportedVisionExercise = 'squat' | 'push_up' | 'lunge' | 'plank' | 'bicep_curl' | 'shoulder_press'
 
 export type MovementPhase = 'READY' | 'ECCENTRIC' | 'BOTTOM_INFLECTION' | 'CONCENTRIC' | 'COMPLETED'
 

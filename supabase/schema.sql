@@ -941,6 +941,90 @@ CREATE TABLE IF NOT EXISTS public.notification_preferences (
 
 ALTER TABLE public.notification_preferences ENABLE ROW LEVEL SECURITY;
 
+-- 35. Biomechanics Sessions Table
+CREATE TABLE IF NOT EXISTS public.biomechanics_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  session_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  exercise TEXT NOT NULL,
+  exercise_name TEXT NOT NULL,
+  total_reps INTEGER NOT NULL DEFAULT 0,
+  clean_reps INTEGER NOT NULL DEFAULT 0,
+  partial_reps INTEGER NOT NULL DEFAULT 0,
+  average_form_score INTEGER NOT NULL CHECK (average_form_score >= 0 AND average_form_score <= 100),
+  duration_seconds INTEGER NOT NULL DEFAULT 0,
+  max_knee_angle NUMERIC(5, 2),
+  min_knee_angle NUMERIC(5, 2),
+  max_elbow_angle NUMERIC(5, 2),
+  min_elbow_angle NUMERIC(5, 2),
+  max_torso_lean NUMERIC(5, 2),
+  primary_feedback TEXT[] DEFAULT '{}',
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.biomechanics_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own biomechanics sessions"
+  ON public.biomechanics_sessions FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own biomechanics sessions"
+  ON public.biomechanics_sessions FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own biomechanics sessions"
+  ON public.biomechanics_sessions FOR DELETE USING (auth.uid() = user_id);
+
+-- 36. Performance Lab Tests Table
+CREATE TABLE IF NOT EXISTS public.performance_tests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  test_id TEXT NOT NULL,
+  test_title TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('strength_progression', 'repetition_endurance', 'timed_endurance', 'workload_capacity')),
+  test_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  result_value NUMERIC(8, 2) NOT NULL,
+  unit TEXT NOT NULL,
+  estimated_1rm NUMERIC(8, 2),
+  is_baseline BOOLEAN NOT NULL DEFAULT false,
+  conditions_met BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.performance_tests ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own performance tests"
+  ON public.performance_tests FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own performance tests"
+  ON public.performance_tests FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own performance tests"
+  ON public.performance_tests FOR DELETE USING (auth.uid() = user_id);
+
+-- 37. Fitness Intelligence Snapshots Table
+CREATE TABLE IF NOT EXISTS public.fitness_intelligence_snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  data_completeness_pct INTEGER NOT NULL CHECK (data_completeness_pct >= 0 AND data_completeness_pct <= 100),
+  total_records_examined INTEGER NOT NULL DEFAULT 0,
+  nodes JSONB NOT NULL DEFAULT '[]'::jsonb,
+  edges JSONB NOT NULL DEFAULT '[]'::jsonb,
+  insights JSONB NOT NULL DEFAULT '[]'::jsonb,
+  missing_data_summaries TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.fitness_intelligence_snapshots ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own intelligence snapshots"
+  ON public.fitness_intelligence_snapshots FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own intelligence snapshots"
+  ON public.fitness_intelligence_snapshots FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+
 
 
 
