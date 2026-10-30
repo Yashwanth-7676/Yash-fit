@@ -1021,8 +1021,142 @@ ALTER TABLE public.fitness_intelligence_snapshots ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view their own intelligence snapshots"
   ON public.fitness_intelligence_snapshots FOR SELECT USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert their own intelligence snapshots"
-  ON public.fitness_intelligence_snapshots FOR INSERT WITH CHECK (auth.uid() = user_id);
+-- ========================================================
+-- Phase 11: Global Fitness Arena, Virtual World, Reports & Lifestyle (Upgrades #25–#28)
+-- ========================================================
+
+-- 38. Arena Competitions Table
+CREATE TABLE IF NOT EXISTS public.arena_competitions (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN ('volume_load', 'streak_consistency', 'metabolic_endurance', 'strength_ratio')),
+  scope TEXT NOT NULL CHECK (scope IN ('global', 'regional', 'friends_only', 'private_invite')),
+  format TEXT NOT NULL CHECK (format IN ('solo_leaderboard', 'team_challenge', 'tournament_bracket')),
+  start_date TIMESTAMPTZ NOT NULL,
+  end_date TIMESTAMPTZ NOT NULL,
+  status TEXT NOT NULL DEFAULT 'upcoming' CHECK (status IN ('upcoming', 'active', 'completed')),
+  reward_xp INTEGER NOT NULL DEFAULT 500,
+  badge_reward TEXT NOT NULL,
+  participant_count INTEGER NOT NULL DEFAULT 0,
+  rules TEXT[] DEFAULT '{}',
+  scoring_cap_daily_points INTEGER NOT NULL DEFAULT 250,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.arena_competitions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view active arena competitions"
+  ON public.arena_competitions FOR SELECT USING (true);
+
+-- 39. Arena Competition Participants Table
+CREATE TABLE IF NOT EXISTS public.arena_participants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  competition_id TEXT NOT NULL REFERENCES public.arena_competitions(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  username TEXT NOT NULL,
+  avatar_url TEXT,
+  score NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  rank INTEGER,
+  team_name TEXT,
+  verified_events_count INTEGER NOT NULL DEFAULT 0,
+  last_activity_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  daily_points_today INTEGER NOT NULL DEFAULT 0,
+  is_flagged BOOLEAN NOT NULL DEFAULT false,
+  joined_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  UNIQUE(competition_id, user_id)
+);
+
+ALTER TABLE public.arena_participants ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Participants are viewable by all users"
+  ON public.arena_participants FOR SELECT USING (true);
+
+CREATE POLICY "Users can register and update their arena participation"
+  ON public.arena_participants FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own arena score"
+  ON public.arena_participants FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- 40. Virtual Fitness World Rooms Table
+CREATE TABLE IF NOT EXISTS public.virtual_world_rooms (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  host_user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  environment TEXT NOT NULL CHECK (environment IN ('cyber_dojo', 'zen_sanctuary', 'neon_powerhouse', 'olympic_hall')),
+  max_participants INTEGER NOT NULL DEFAULT 8,
+  current_participants INTEGER NOT NULL DEFAULT 1,
+  is_private BOOLEAN NOT NULL DEFAULT false,
+  invite_code TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.virtual_world_rooms ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can view public virtual world rooms"
+  ON public.virtual_world_rooms FOR SELECT USING (is_private = false OR auth.uid() = host_user_id);
+
+CREATE POLICY "Users can create virtual rooms"
+  ON public.virtual_world_rooms FOR INSERT WITH CHECK (auth.uid() = host_user_id);
+
+CREATE POLICY "Hosts can update their virtual rooms"
+  ON public.virtual_world_rooms FOR UPDATE USING (auth.uid() = host_user_id) WITH CHECK (auth.uid() = host_user_id);
+
+-- 41. Fitness Reports Table
+CREATE TABLE IF NOT EXISTS public.fitness_reports (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  report_type TEXT NOT NULL CHECK (report_type IN ('weekly', 'monthly', 'yearly', 'consistency', 'strength', 'nutrition', 'recovery', 'achievements')),
+  title TEXT NOT NULL,
+  subtitle TEXT NOT NULL,
+  start_date DATE NOT NULL,
+  end_date DATE NOT NULL,
+  metrics JSONB NOT NULL DEFAULT '[]'::jsonb,
+  chart_data JSONB NOT NULL DEFAULT '[]'::jsonb,
+  personal_records JSONB NOT NULL DEFAULT '[]'::jsonb,
+  recommendations TEXT[] DEFAULT '{}',
+  missing_data_notices TEXT[] DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.fitness_reports ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own reports"
+  ON public.fitness_reports FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own reports"
+  ON public.fitness_reports FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own reports"
+  ON public.fitness_reports FOR DELETE USING (auth.uid() = user_id);
+
+-- 42. Lifestyle Schedules Table
+CREATE TABLE IF NOT EXISTS public.lifestyle_schedules (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  schedule_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  timezone TEXT NOT NULL DEFAULT 'Asia/Kolkata',
+  time_slots JSONB NOT NULL DEFAULT '[]'::jsonb,
+  adherence_score_pct INTEGER NOT NULL CHECK (adherence_score_pct >= 0 AND adherence_score_pct <= 100),
+  total_planned_workout_minutes INTEGER NOT NULL DEFAULT 60,
+  target_water_liters NUMERIC(4, 2) NOT NULL DEFAULT 3.5,
+  target_sleep_duration_hours NUMERIC(4, 2) NOT NULL DEFAULT 8.0,
+  pending_proposals JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  UNIQUE(user_id, schedule_date)
+);
+
+ALTER TABLE public.lifestyle_schedules ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own lifestyle schedules"
+  ON public.lifestyle_schedules FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own lifestyle schedules"
+  ON public.lifestyle_schedules FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own lifestyle schedules"
+  ON public.lifestyle_schedules FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
 
 
 

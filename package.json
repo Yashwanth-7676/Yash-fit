@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "test": "tsc --noEmit && jiti tests/autopilot.test.ts && jiti tests/virtualGym.test.ts && jiti tests/megaUpgrades.test.ts && jiti tests/megaUpgrades2.test.ts && jiti tests/megaUpgrades3.test.ts"
+    "test": "tsc --noEmit && jiti tests/autopilot.test.ts && jiti tests/virtualGym.test.ts && jiti tests/megaUpgrades.test.ts && jiti tests/megaUpgrades2.test.ts && jiti tests/megaUpgrades3.test.ts && jiti tests/megaUpgrades4.test.ts"
   },
   "imports": {
     "@/*": "./src/*"

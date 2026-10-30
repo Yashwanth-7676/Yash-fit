@@ -29,6 +29,10 @@ import {
   Watch,
   Share2,
   Trophy,
+  Swords,
+  Globe,
+  FileText,
+  Clock,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -124,6 +128,18 @@ const navItems: NavItem[] = [
     badge: 'Social',
   },
   {
+    label: 'Arena',
+    href: '/arena',
+    icon: <Swords size={18} />,
+    badge: 'Global',
+  },
+  {
+    label: 'Fitness World',
+    href: '/fitness-world',
+    icon: <Globe size={18} />,
+    badge: '3D',
+  },
+  {
     label: 'Quests',
     href: '/quests',
     icon: <Target size={18} />,
@@ -148,6 +164,18 @@ const navItems: NavItem[] = [
     label: 'Digital Twin',
     href: '/digital-twin',
     icon: <Activity size={18} />,
+  },
+  {
+    label: 'Reports',
+    href: '/reports',
+    icon: <FileText size={18} />,
+    badge: 'Audit',
+  },
+  {
+    label: 'Lifestyle',
+    href: '/lifestyle',
+    icon: <Clock size={18} />,
+    badge: '24H',
   },
   {
     label: 'Nutrition Planner',
