@@ -1157,6 +1157,319 @@ CREATE POLICY "Users can insert their own lifestyle schedules"
 CREATE POLICY "Users can update their own lifestyle schedules"
   ON public.lifestyle_schedules FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
+-- ========================================================
+-- Phase 12: AI Food Vision, Smart Grocery, Trainer Workspace & Privacy Center (Upgrades #29–#32)
+-- ========================================================
+
+-- 43. Scanned Meals Table (Upgrade #29)
+CREATE TABLE IF NOT EXISTS public.scanned_meals (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  meal_type TEXT NOT NULL CHECK (meal_type IN ('Breakfast', 'Lunch', 'Snack', 'Dinner')),
+  image_url TEXT,
+  detected_items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  total_calories INTEGER NOT NULL DEFAULT 0,
+  total_protein NUMERIC(6, 2) NOT NULL DEFAULT 0,
+  total_carbs NUMERIC(6, 2) NOT NULL DEFAULT 0,
+  total_fats NUMERIC(6, 2) NOT NULL DEFAULT 0,
+  total_fiber NUMERIC(6, 2) NOT NULL DEFAULT 0,
+  analysis_method TEXT NOT NULL DEFAULT 'rule_fallback' CHECK (analysis_method IN ('ai_vision', 'rule_fallback', 'manual_entry')),
+  confidence_overall NUMERIC(3, 2) NOT NULL DEFAULT 0.90,
+  is_confirmed BOOLEAN NOT NULL DEFAULT true,
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.scanned_meals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own scanned meals"
+  ON public.scanned_meals FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert their own scanned meals"
+  ON public.scanned_meals FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own scanned meals"
+  ON public.scanned_meals FOR DELETE USING (auth.uid() = user_id);
+
+-- 44. Smart Grocery Plans Table (Upgrade #30)
+CREATE TABLE IF NOT EXISTS public.smart_groceries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  week_start_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  dietary_preference TEXT NOT NULL DEFAULT 'Vegetarian',
+  items JSONB NOT NULL DEFAULT '[]'::jsonb,
+  total_estimated_cost_inr INTEGER NOT NULL DEFAULT 0,
+  total_actual_cost_inr INTEGER NOT NULL DEFAULT 0,
+  budget_limit_inr INTEGER NOT NULL DEFAULT 2200,
+  is_archived BOOLEAN NOT NULL DEFAULT false,
+  last_updated TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.smart_groceries ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own smart grocery lists"
+  ON public.smart_groceries FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert and update their smart grocery lists"
+  ON public.smart_groceries FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own smart grocery lists"
+  ON public.smart_groceries FOR UPDATE USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
+
+-- 45. Trainer Profiles Table (Upgrade #31)
+CREATE TABLE IF NOT EXISTS public.trainer_profiles (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+  full_name TEXT NOT NULL,
+  specialization TEXT NOT NULL,
+  bio TEXT,
+  invite_code TEXT NOT NULL UNIQUE,
+  is_accepting_clients BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.trainer_profiles ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone authenticated can view active trainer profiles"
+  ON public.trainer_profiles FOR SELECT USING (true);
+
+CREATE POLICY "Trainers can manage their own profile"
+  ON public.trainer_profiles FOR ALL USING (auth.uid() = user_id);
+
+-- 46. Trainer-Client Relationships Table (Upgrade #31)
+CREATE TABLE IF NOT EXISTS public.trainer_client_relationships (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  trainer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  client_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('active', 'pending', 'declined', 'revoked')),
+  consent_scopes JSONB NOT NULL DEFAULT '{"shareWorkouts": true, "shareNutrition": true, "shareRecovery": true, "shareMeasurements": false, "shareTransformationPhotos": false}'::jsonb,
+  adherence_score_pct INTEGER NOT NULL DEFAULT 0,
+  assigned_routine_id TEXT,
+  assigned_routine_name TEXT,
+  target_calories INTEGER,
+  target_protein INTEGER,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  UNIQUE(trainer_id, client_id)
+);
+
+ALTER TABLE public.trainer_client_relationships ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Trainers and clients can view their active relationships"
+  ON public.trainer_client_relationships FOR SELECT
+  USING (auth.uid() = trainer_id OR auth.uid() = client_id);
+
+CREATE POLICY "Clients can update their consent scopes or revoke access"
+  ON public.trainer_client_relationships FOR UPDATE
+  USING (auth.uid() = client_id)
+  WITH CHECK (auth.uid() = client_id);
+
+CREATE POLICY "Trainers can update assigned routines and status"
+  ON public.trainer_client_relationships FOR UPDATE
+  USING (auth.uid() = trainer_id)
+  WITH CHECK (auth.uid() = trainer_id);
+
+-- 47. Trainer Private Client Notes Table (Upgrade #31)
+CREATE TABLE IF NOT EXISTS public.trainer_client_notes (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  trainer_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  client_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  note_text TEXT NOT NULL,
+  is_private_to_trainer BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.trainer_client_notes ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Trainers can manage their private notes only"
+  ON public.trainer_client_notes FOR ALL USING (auth.uid() = trainer_id);
+
+-- 48. Client Check-Ins Table (Upgrade #31)
+CREATE TABLE IF NOT EXISTS public.client_checkins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  weight_kg NUMERIC(5, 2),
+  energy_score INTEGER NOT NULL CHECK (energy_score >= 1 AND energy_score <= 10),
+  soreness TEXT NOT NULL CHECK (soreness IN ('Low', 'Moderate', 'High')),
+  comments TEXT NOT NULL,
+  trainer_feedback TEXT,
+  feedback_sent_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.client_checkins ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Clients can manage their own checkins"
+  ON public.client_checkins FOR ALL USING (auth.uid() = client_id);
+
+CREATE POLICY "Trainers can view and feedback authorized client checkins"
+  ON public.client_checkins FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.trainer_client_relationships r
+      WHERE r.trainer_id = auth.uid()
+        AND r.client_id = public.client_checkins.client_id
+        AND r.status = 'active'
+    )
+  );
+
+CREATE POLICY "Trainers can update feedback on client checkins"
+  ON public.client_checkins FOR UPDATE
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.trainer_client_relationships r
+      WHERE r.trainer_id = auth.uid()
+        AND r.client_id = public.client_checkins.client_id
+        AND r.status = 'active'
+    )
+  );
+
+-- 49. User Privacy Preferences & Security Events (Upgrade #32)
+CREATE TABLE IF NOT EXISTS public.user_privacy_preferences (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  profile_visibility TEXT NOT NULL DEFAULT 'public' CHECK (profile_visibility IN ('public', 'friends_only', 'private')),
+  share_workout_activity BOOLEAN NOT NULL DEFAULT true,
+  anonymous_in_leaderboards BOOLEAN NOT NULL DEFAULT false,
+  trainer_access_allowed BOOLEAN NOT NULL DEFAULT true,
+  encrypt_progress_photos BOOLEAN NOT NULL DEFAULT true,
+  ai_data_processing_allowed BOOLEAN NOT NULL DEFAULT true,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.user_privacy_preferences ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own privacy preferences"
+  ON public.user_privacy_preferences FOR ALL USING (auth.uid() = user_id);
+
+CREATE TABLE IF NOT EXISTS public.user_security_events (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  event_type TEXT NOT NULL CHECK (event_type IN ('login', 'export', 'permission_change', 'password_update', 'session_terminated')),
+  description TEXT NOT NULL,
+  severity TEXT NOT NULL DEFAULT 'info' CHECK (severity IN ('info', 'warning', 'security')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.user_security_events ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can view their own security audit events"
+  ON public.user_security_events FOR SELECT USING (auth.uid() = user_id);
+
+-- ══════════════════════════════════════════════════════════════════════════════
+-- PHASE 13 SCHEMA — UPGRADES #33 TO #36
+-- ══════════════════════════════════════════════════════════════════════════════
+
+-- 50. Body Intelligence Records & Anthropometrics (Upgrade #33)
+CREATE TABLE IF NOT EXISTS public.body_intelligence_records (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  recorded_date DATE NOT NULL,
+  weight_kg NUMERIC(5, 2) NOT NULL,
+  height_cm NUMERIC(5, 2) NOT NULL,
+  gender TEXT NOT NULL DEFAULT 'male' CHECK (gender IN ('male', 'female', 'other')),
+  age INTEGER NOT NULL,
+  waist_cm NUMERIC(5, 2),
+  neck_cm NUMERIC(5, 2),
+  hips_cm NUMERIC(5, 2),
+  chest_cm NUMERIC(5, 2),
+  arm_cm NUMERIC(5, 2),
+  thigh_cm NUMERIC(5, 2),
+  front_photo_url TEXT,
+  side_photo_url TEXT,
+  back_photo_url TEXT,
+  body_fat_percentage NUMERIC(4, 1) NOT NULL,
+  lean_mass_kg NUMERIC(5, 2) NOT NULL,
+  fat_mass_kg NUMERIC(5, 2) NOT NULL,
+  bmi NUMERIC(4, 1) NOT NULL,
+  formula_used TEXT NOT NULL DEFAULT 'navy_method' CHECK (formula_used IN ('navy_method', 'bmi_derived', 'manual')),
+  confidence_rating TEXT NOT NULL DEFAULT 'high' CHECK (confidence_rating IN ('high', 'moderate', 'approximate')),
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT body_intelligence_user_date UNIQUE (user_id, recorded_date)
+);
+
+ALTER TABLE public.body_intelligence_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage their own body composition records"
+  ON public.body_intelligence_records FOR ALL USING (auth.uid() = user_id);
+
+-- 51. Body Intelligence Goals (Upgrade #33)
+CREATE TABLE IF NOT EXISTS public.body_intelligence_goals (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  current_weight_kg NUMERIC(5, 2) NOT NULL,
+  target_weight_kg NUMERIC(5, 2) NOT NULL,
+  target_body_fat_percent NUMERIC(4, 1),
+  target_waist_cm NUMERIC(5, 2),
+  target_date DATE,
+  weekly_rate_goal_kg NUMERIC(4, 2) NOT NULL DEFAULT -0.40,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.body_intelligence_goals ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage their own body intelligence goals"
+  ON public.body_intelligence_goals FOR ALL USING (auth.uid() = user_id);
+
+-- 52. Interactive Smart Workout Studio Sessions (Upgrade #34)
+CREATE TABLE IF NOT EXISTS public.studio_workout_sessions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  routine_name TEXT NOT NULL,
+  started_at TIMESTAMPTZ NOT NULL,
+  completed_at TIMESTAMPTZ NOT NULL,
+  duration_seconds INTEGER NOT NULL,
+  total_volume_kg NUMERIC(8, 2) NOT NULL,
+  total_sets_completed INTEGER NOT NULL,
+  estimated_calories_burned INTEGER NOT NULL,
+  personal_records_hit JSONB NOT NULL DEFAULT '[]'::jsonb,
+  exercises_detail JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.studio_workout_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage their own studio workout sessions"
+  ON public.studio_workout_sessions FOR ALL USING (auth.uid() = user_id);
+
+-- 53. Predictive Fitness Snapshots (Upgrade #35)
+CREATE TABLE IF NOT EXISTS public.predictive_fitness_snapshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  snapshot_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  consistency_score_percent INTEGER NOT NULL,
+  projected_goal_date DATE,
+  projected_weeks_to_goal INTEGER,
+  model_confidence_percent INTEGER NOT NULL,
+  compound_projections JSONB NOT NULL DEFAULT '[]'::jsonb,
+  missing_data_audits JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.predictive_fitness_snapshots ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users view their own predictive snapshots"
+  ON public.predictive_fitness_snapshots FOR ALL USING (auth.uid() = user_id);
+
+-- 54. AI Companion Conversation History (Upgrade #36)
+CREATE TABLE IF NOT EXISTS public.companion_conversations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+  content TEXT NOT NULL,
+  persona_used TEXT NOT NULL DEFAULT 'encouraging' CHECK (persona_used IN ('encouraging', 'disciplined', 'scientific')),
+  grounded_facts JSONB NOT NULL DEFAULT '[]'::jsonb,
+  timestamp TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
+ALTER TABLE public.companion_conversations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users manage their own companion conversations"
+  ON public.companion_conversations FOR ALL USING (auth.uid() = user_id);
+
+
+
 
 
 

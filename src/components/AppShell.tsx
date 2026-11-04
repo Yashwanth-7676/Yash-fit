@@ -33,6 +33,14 @@ import {
   Globe,
   FileText,
   Clock,
+  ScanLine,
+  Receipt,
+  Briefcase,
+  ShieldCheck,
+  Scale,
+  PlayCircle,
+  LineChart,
+  Sparkles,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -76,9 +84,27 @@ const navItems: NavItem[] = [
     badge: 'Voice',
   },
   {
+    label: 'AI Companion',
+    href: '/companion',
+    icon: <Sparkles size={18} />,
+    badge: 'Astra',
+  },
+  {
+    label: 'Trainer Portal',
+    href: '/trainer',
+    icon: <Briefcase size={18} />,
+    badge: 'Pro',
+  },
+  {
     label: 'Workout',
     href: '/workout',
     icon: <Dumbbell size={18} />,
+  },
+  {
+    label: 'Workout Studio',
+    href: '/workout-studio',
+    icon: <PlayCircle size={18} />,
+    badge: 'Live',
   },
   {
     label: 'Autopilot',
@@ -161,6 +187,12 @@ const navItems: NavItem[] = [
     badge: 'Visual',
   },
   {
+    label: 'Body Intelligence',
+    href: '/body-intelligence',
+    icon: <Scale size={18} />,
+    badge: '3D/AI',
+  },
+  {
     label: 'Digital Twin',
     href: '/digital-twin',
     icon: <Activity size={18} />,
@@ -199,6 +231,18 @@ const navItems: NavItem[] = [
     icon: <ShoppingCart size={18} />,
   },
   {
+    label: 'Food Scanner',
+    href: '/food-scanner',
+    icon: <ScanLine size={18} />,
+    badge: 'Vision',
+  },
+  {
+    label: 'Smart Grocery',
+    href: '/smart-grocery',
+    icon: <Receipt size={18} />,
+    badge: 'Budget',
+  },
+  {
     label: 'Recovery',
     href: '/recovery',
     icon: <HeartPulse size={18} />,
@@ -215,9 +259,21 @@ const navItems: NavItem[] = [
     icon: <Lightbulb size={18} />,
   },
   {
+    label: 'Predictions',
+    href: '/predictions',
+    icon: <LineChart size={18} />,
+    badge: 'Forecast',
+  },
+  {
     label: 'Settings',
     href: '/settings',
     icon: <Settings size={18} />,
+  },
+  {
+    label: 'Privacy Center',
+    href: '/privacy-center',
+    icon: <ShieldCheck size={18} />,
+    badge: 'Shield',
   },
 ]
 
