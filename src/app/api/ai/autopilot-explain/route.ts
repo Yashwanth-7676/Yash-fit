@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import type { TodayWorkoutRecommendation } from '@/types/autopilot'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: Request) {
   try {
@@ -55,7 +56,7 @@ Rules:
           }
         }
       } catch (err) {
-        console.warn('Gemini explanation fallback to rule-based:', err)
+        logger.warn('Gemini explanation fallback to rule-based', undefined, err)
       }
     }
 
@@ -95,7 +96,7 @@ Rules:
           }
         }
       } catch (err) {
-        console.warn('OpenAI explanation fallback to rule-based:', err)
+        logger.warn('OpenAI explanation fallback to rule-based', undefined, err)
       }
     }
 

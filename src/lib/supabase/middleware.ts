@@ -14,57 +14,37 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse
   }
 
-  const supabase = createServerClient(
-    url,
-    key,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
+  try {
+    const supabase = createServerClient(
+      url,
+      key,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll()
+          },
+          setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value)
+            )
+            supabaseResponse = NextResponse.next({
+              request,
+            })
+            cookiesToSet.forEach(({ name, value, options }) =>
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              supabaseResponse.cookies.set(name, value, options as any)
+            )
+          },
         },
-        setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            supabaseResponse.cookies.set(name, value, options as any)
-          )
-        },
-      },
-    }
-  )
+      }
+    )
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const protectedPaths = [
-    '/dashboard',
-    '/onboarding',
-    '/workout',
-    '/exercises',
-    '/progress',
-    '/nutrition',
-    '/meals',
-    '/grocery',
-    '/recovery',
-    '/insights',
-    '/settings',
-  ]
-  const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path)
-  )
-
-  if (!user && isProtectedPath) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/login'
-    return NextResponse.redirect(url)
+    // IMPORTANT: Refresh session token before Server Components render
+    await supabase.auth.getUser()
+  } catch (error) {
+    // Graceful fallback: do not crash middleware on network/credential latency
+    console.warn('Supabase middleware session refresh skipped:', error)
   }
 
   return supabaseResponse
 }
-

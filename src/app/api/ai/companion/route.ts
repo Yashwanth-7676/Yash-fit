@@ -3,6 +3,7 @@ import type {
   CompanionChatRequest,
   CompanionChatResponse,
 } from '@/types/aiCompanion'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -138,6 +139,7 @@ User message: "${message}"`
 
     return NextResponse.json(fallbackResponse)
   } catch (error) {
+    logger.error('Failed to process AI companion message', undefined, error)
     return NextResponse.json(
       { error: 'Failed to process AI companion message', details: String(error) },
       { status: 500 }

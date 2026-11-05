@@ -7,7 +7,15 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint src",
-    "test": "tsc --noEmit && jiti tests/autopilot.test.ts && jiti tests/virtualGym.test.ts && jiti tests/megaUpgrades.test.ts && jiti tests/megaUpgrades2.test.ts && jiti tests/megaUpgrades3.test.ts && jiti tests/megaUpgrades4.test.ts && jiti tests/megaUpgrades5.test.ts && jiti tests/megaUpgrades6.test.ts"
+    "typecheck": "tsc --noEmit",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "test:security": "vitest run tests/security",
+    "test:vitest": "vitest run",
+    "test:legacy": "jiti tests/autopilot.test.ts && jiti tests/virtualGym.test.ts && jiti tests/megaUpgrades.test.ts && jiti tests/megaUpgrades2.test.ts && jiti tests/megaUpgrades3.test.ts && jiti tests/megaUpgrades4.test.ts && jiti tests/megaUpgrades5.test.ts && jiti tests/megaUpgrades6.test.ts",
+    "test:e2e": "playwright test",
+    "test:e2e:desktop": "playwright test --project=desktop-chrome",
+    "test": "npm run typecheck && npm run test:vitest && npm run test:legacy"
   },
   "imports": {
     "@/*": "./src/*"
@@ -26,6 +34,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
+    "@playwright/test": "^1.64.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",
@@ -33,6 +42,8 @@
     "eslint": "^9",
     "eslint-config-next": "15.3.5",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
   }
 }

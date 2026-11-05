@@ -227,13 +227,13 @@ export default function LoginPage() {
 
           <p className="mt-6 text-center text-xs text-zinc-600">
             By signing in, you agree to YashFit&apos;s{' '}
-            <a href="#" className="text-zinc-500 hover:text-white transition-colors underline">
+            <Link href="/terms" className="text-zinc-500 hover:text-white transition-colors underline">
               Terms
-            </a>{' '}
+            </Link>{' '}
             and{' '}
-            <a href="#" className="text-zinc-500 hover:text-white transition-colors underline">
+            <Link href="/privacy" className="text-zinc-500 hover:text-white transition-colors underline">
               Privacy Policy
-            </a>
+            </Link>
             .
           </p>
         </div>

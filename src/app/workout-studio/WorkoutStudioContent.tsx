@@ -40,6 +40,7 @@ export function WorkoutStudioContent() {
 
   // Substitution modal
   const [isSubModalOpen, setIsSubModalOpen] = useState(false)
+  const [isEndConfirmOpen, setIsEndConfirmOpen] = useState(false)
 
   // Timers
   const workoutTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -262,16 +263,20 @@ export function WorkoutStudioContent() {
   // End workout
   const handleEndWorkout = () => {
     if (!workoutState) return
-    if (confirm('Finish and save this workout session?')) {
-      const summary = completeStudioSession(workoutState)
-      setSummaryData(summary)
-      setIsSummaryOpen(true)
-      speakStudioCue(
-        `Outstanding work! You completed ${summary.totalSetsCompleted} sets and moved over ${summary.totalVolumeKg} kilograms!`,
-        workoutState.voiceEnabled
-      )
-      setWorkoutState(null)
-    }
+    setIsEndConfirmOpen(true)
+  }
+
+  const confirmEndWorkout = () => {
+    if (!workoutState) return
+    setIsEndConfirmOpen(false)
+    const summary = completeStudioSession(workoutState)
+    setSummaryData(summary)
+    setIsSummaryOpen(true)
+    speakStudioCue(
+      `Outstanding work! You completed ${summary.totalSetsCompleted} sets and moved over ${summary.totalVolumeKg} kilograms!`,
+      workoutState.voiceEnabled
+    )
+    setWorkoutState(null)
   }
 
   // Format mm:ss
@@ -794,6 +799,33 @@ export function WorkoutStudioContent() {
           </div>
         </Modal>
       )}
+
+      {/* End Workout Confirmation Modal */}
+      <Modal
+        isOpen={isEndConfirmOpen}
+        onClose={() => setIsEndConfirmOpen(false)}
+        title="Complete Workout Session"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-300">
+            Are you ready to complete and save today&apos;s workout session? Your completed sets, reps, and total moved volume will be logged to your fitness history.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" size="sm" onClick={() => setIsEndConfirmOpen(false)}>
+              Keep Training
+            </Button>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={confirmEndWorkout}
+              className="bg-lime-400 text-zinc-950 font-semibold"
+            >
+              Finish &amp; Save
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

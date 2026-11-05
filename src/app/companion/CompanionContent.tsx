@@ -14,7 +14,7 @@ import {
   ShieldCheck,
   RotateCcw,
 } from 'lucide-react'
-import { Card, Badge, Button, Input, useToast } from '@/components/ui'
+import { Card, Badge, Button, Input, Modal, useToast } from '@/components/ui'
 import {
   getCompanionConversationHistory,
   saveCompanionConversationHistory,
@@ -38,6 +38,7 @@ export function CompanionContent() {
   const [inputText, setInputText] = useState('')
   const [persona, setPersona] = useState<CompanionPersonaStyle>('encouraging')
   const [isLoading, setIsLoading] = useState(false)
+  const [isResetConfirmOpen, setIsResetConfirmOpen] = useState(false)
   const [context, setContext] = useState<CompanionUserContext | null>(null)
   const [checkInStatus, setCheckInStatus] = useState<DailyCheckInStatus | null>(null)
 
@@ -96,13 +97,12 @@ export function CompanionContent() {
   }
 
   // Clear chat history
-  const handleClearHistory = () => {
-    if (confirm('Clear companion conversation history?')) {
-      const reset = [INITIAL_COMPANION_MESSAGE]
-      setMessages(reset)
-      saveCompanionConversationHistory(reset)
-      toast.info('Conversation history reset')
-    }
+  const confirmResetHistory = () => {
+    const reset = [INITIAL_COMPANION_MESSAGE]
+    setMessages(reset)
+    saveCompanionConversationHistory(reset)
+    setIsResetConfirmOpen(false)
+    toast.info('Conversation history reset')
   }
 
   const quickPromptChips = [
@@ -341,7 +341,7 @@ export function CompanionContent() {
           <Button
             type="button"
             variant="outline"
-            onClick={handleClearHistory}
+            onClick={() => setIsResetConfirmOpen(true)}
             className="p-2 border-zinc-800 text-zinc-500 hover:text-zinc-300 shrink-0"
             title="Reset Conversation"
           >
@@ -360,6 +360,28 @@ export function CompanionContent() {
           or replace licensed clinical healthcare advice.
         </div>
       </div>
+
+      {/* Reset Confirmation Modal */}
+      <Modal
+        isOpen={isResetConfirmOpen}
+        onClose={() => setIsResetConfirmOpen(false)}
+        title="Reset Conversation History"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-300">
+            Are you sure you want to clear your conversation history with Astra? Your messages will be restored to the welcome greeting.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" size="sm" onClick={() => setIsResetConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={confirmResetHistory}>
+              Reset History
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

@@ -49,13 +49,14 @@ export function BodyIntelligenceContent() {
   // Modals state
   const [isLogModalOpen, setIsLogModalOpen] = useState(false)
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false)
+  const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null)
 
   // Comparison selection
   const [baselineId, setBaselineId] = useState<string>('')
   const [currentId, setCurrentId] = useState<string>('')
 
   // Form state for logging
-  const [formDate, setFormDate] = useState(new Date().toISOString().slice(0, 10))
+  const [formDate, setFormDate] = useState('2026-01-01')
   const [formWeight, setFormWeight] = useState('74.0')
   const [formHeight, setFormHeight] = useState('175')
   const [formAge, setFormAge] = useState('26')
@@ -82,6 +83,7 @@ export function BodyIntelligenceContent() {
     const loadedGoal = getBodyIntelligenceGoal()
     setRecords(loadedRecords)
     setGoal(loadedGoal)
+    setFormDate(new Date().toISOString().slice(0, 10))
 
     if (loadedRecords.length >= 2) {
       setBaselineId(loadedRecords[loadedRecords.length - 1].id)
@@ -189,12 +191,12 @@ export function BodyIntelligenceContent() {
   }
 
   // Handle delete record
-  const handleDeleteRecord = (id: string) => {
-    if (confirm('Delete this measurement entry?')) {
-      const updated = deleteBodyIntelligenceRecord(id)
-      setRecords(updated)
-      toast.info('Measurement entry deleted')
-    }
+  const confirmDeleteRecord = () => {
+    if (!deleteTargetId) return
+    const updated = deleteBodyIntelligenceRecord(deleteTargetId)
+    setRecords(updated)
+    setDeleteTargetId(null)
+    toast.info('Measurement entry deleted')
   }
 
   // Handle save goal
@@ -748,8 +750,9 @@ export function BodyIntelligenceContent() {
                   </div>
                   <Button
                     variant="outline"
-                    onClick={() => handleDeleteRecord(r.id)}
+                    onClick={() => setDeleteTargetId(r.id)}
                     className="p-1.5 text-zinc-500 hover:text-rose-400 border-zinc-800 hover:border-rose-900/40"
+                    aria-label={`Delete record for ${r.recordedDate}`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
@@ -1091,6 +1094,28 @@ export function BodyIntelligenceContent() {
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        isOpen={Boolean(deleteTargetId)}
+        onClose={() => setDeleteTargetId(null)}
+        title="Delete Measurement Entry"
+        maxWidth="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-zinc-300">
+            Are you sure you want to permanently delete this measurement entry? This action cannot be undone.
+          </p>
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <Button variant="ghost" size="sm" onClick={() => setDeleteTargetId(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" size="sm" onClick={confirmDeleteRecord}>
+              Delete Entry
+            </Button>
+          </div>
+        </div>
       </Modal>
     </div>
   )

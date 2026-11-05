@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { buildCoachContext } from '@/lib/ai/coachContextService'
 import { queryAiCoach } from '@/lib/ai/providers'
 import { createClient } from '@/lib/supabase/server'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function POST(req: NextRequest) {
     })
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error'
-    console.error('Coach API Error:', err)
+    logger.error('Coach API Error', { details: errorMsg }, err)
     return NextResponse.json(
       { error: 'Failed to process coach query.', details: errorMsg },
       { status: 500 }

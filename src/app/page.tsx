@@ -497,13 +497,28 @@ function Footer() {
           <p className="text-xs text-zinc-600">
             © {new Date().getFullYear()} YashFit. All rights reserved.
           </p>
-          <div className="flex items-center gap-5">
-            <a href="#" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+          <div className="flex flex-wrap items-center gap-5">
+            <Link href="/privacy" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
               Privacy Policy
-            </a>
-            <a href="#" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+            </Link>
+            <Link href="/terms" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
               Terms of Service
-            </a>
+            </Link>
+            <Link href="/support" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+              Support & Help
+            </Link>
+            <Link href="/feedback" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+              Feedback Center
+            </Link>
+            <Link href="/changelog" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+              Release Notes
+            </Link>
+            <Link href="/data-deletion" className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors">
+              Data Deletion
+            </Link>
+            <Link href="/privacy-center" className="text-xs text-lime-400/80 hover:text-lime-400 transition-colors">
+              Privacy Center
+            </Link>
           </div>
         </div>
       </div>

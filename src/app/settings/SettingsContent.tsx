@@ -1,17 +1,14 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+import Link from 'next/link'
 import {
   User,
-  Target,
-  Dumbbell,
-  Building2,
-  Salad,
   Save,
   CheckCircle2,
   AlertCircle,
-  ShieldCheck,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react'
 import { Card, Button, Input, SectionHeading, Badge } from '@/components/ui'
 import { createClient } from '@/lib/supabase/client'
@@ -22,7 +19,6 @@ import type {
   TrainingEnvironment,
   EquipmentOption,
   DietaryPreference,
-  UserProfile,
   ProfileFormData,
 } from '@/types/profile'
 
@@ -226,11 +222,18 @@ export function SettingsContent() {
             Update your body metrics, fitness goals, and training availability.
           </p>
         </div>
-        {userEmail && (
-          <Badge variant="default" className="text-xs px-3 py-1">
-            {userEmail}
-          </Badge>
-        )}
+        <div className="flex items-center gap-3">
+          <Link href="/profile/avatar">
+            <Button variant="outline" size="sm" icon={<Sparkles size={14} className="text-lime-400" />}>
+              Avatar Studio
+            </Button>
+          </Link>
+          {userEmail && (
+            <Badge variant="default" className="text-xs px-3 py-1">
+              {userEmail}
+            </Badge>
+          )}
+        </div>
       </div>
 
       {saveSuccess && (

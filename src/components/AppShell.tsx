@@ -41,6 +41,8 @@ import {
   PlayCircle,
   LineChart,
   Sparkles,
+  MessageSquare,
+  Rocket,
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
@@ -274,6 +276,17 @@ const navItems: NavItem[] = [
     href: '/privacy-center',
     icon: <ShieldCheck size={18} />,
     badge: 'Shield',
+  },
+  {
+    label: 'Feedback',
+    href: '/feedback',
+    icon: <MessageSquare size={18} />,
+    badge: 'Beta',
+  },
+  {
+    label: 'Changelog',
+    href: '/changelog',
+    icon: <Rocket size={18} />,
   },
 ]
 

@@ -6,6 +6,7 @@ import type {
   DetectedFoodItem,
   FoodVisionScanResponse,
 } from '@/types/foodScanner'
+import { logger } from '@/lib/logger'
 
 export async function POST(req: NextRequest) {
   try {
@@ -104,7 +105,7 @@ Return ONLY valid JSON matching this exact structure:
           }
         }
       } catch (geminiErr) {
-        console.warn('Gemini vision API error, falling back to local heuristic engine:', geminiErr)
+        logger.warn('Gemini vision API error, falling back to local heuristic engine', undefined, geminiErr)
       }
     }
 
@@ -137,6 +138,7 @@ Return ONLY valid JSON matching this exact structure:
     return NextResponse.json(responsePayload)
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown scan error'
+    logger.error('Failed to process meal image', { details: errorMsg }, err)
     return NextResponse.json(
       { error: 'Failed to process meal image.', details: errorMsg },
       { status: 500 }
