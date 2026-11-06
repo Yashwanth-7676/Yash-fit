@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { BiomechanicsContent } from './BiomechanicsContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const BiomechanicsContent = dynamic(
+  () => import('./BiomechanicsContent').then((mod) => mod.BiomechanicsContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading Biomechanics Vision Engine..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Advanced Biomechanics Intelligence | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function BiomechanicsPage() {
-  return <BiomechanicsContent />
+  return (
+    <AppShell>
+      <BiomechanicsContent />
+    </AppShell>
+  )
 }
-

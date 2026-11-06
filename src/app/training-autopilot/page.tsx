@@ -1,6 +1,14 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
-import { TrainingAutopilotContent } from './TrainingAutopilotContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const TrainingAutopilotContent = dynamic(
+  () => import('./TrainingAutopilotContent').then((mod) => mod.TrainingAutopilotContent),
+  {
+    loading: () => <PageLoadingFallback label="Initializing smart training autopilot..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Smart Training Autopilot | YashFit',
@@ -10,18 +18,8 @@ export const metadata: Metadata = {
 
 export default function TrainingAutopilotPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="w-full min-h-[500px] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-lime-400 border-t-transparent animate-spin" />
-            <p className="text-sm text-zinc-400">Initializing Smart Training Autopilot...</p>
-          </div>
-        </div>
-      }
-    >
+    <AppShell>
       <TrainingAutopilotContent />
-    </Suspense>
+    </AppShell>
   )
 }
-

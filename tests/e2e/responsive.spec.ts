@@ -38,7 +38,7 @@ test.describe('Responsive & Multi-Device Testing', () => {
 
     // Verify form fields scale cleanly
     await expect(page.getByLabel(/First Name/i)).toBeVisible()
-    await expect(page.getByLabel(/Age/i)).toBeVisible()
+    await expect(page.locator('input#age')).toBeVisible()
   })
 
   test('Desktop Viewport (1280x800): Persistent Sidebar & Modal Interactions', async ({ page }) => {

@@ -1,6 +1,14 @@
-import React from 'react'
 import type { Metadata } from 'next'
-import { PredictionsContent } from './PredictionsContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const PredictionsContent = dynamic(
+  () => import('./PredictionsContent').then((mod) => mod.PredictionsContent),
+  {
+    loading: () => <PageLoadingFallback label="Synthesizing predictive fitness forecast..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Predictive Fitness Intelligence | YashFit',
@@ -10,9 +18,8 @@ export const metadata: Metadata = {
 
 export default function PredictionsPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <AppShell>
       <PredictionsContent />
-    </div>
+    </AppShell>
   )
 }
-

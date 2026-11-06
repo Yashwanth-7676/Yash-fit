@@ -9,8 +9,15 @@ import {
   AlertCircle,
   RefreshCw,
   Sparkles,
+  Globe,
+  Sliders,
+  Zap,
+  Type,
+  BookOpen,
 } from 'lucide-react'
-import { Card, Button, Input, SectionHeading, Badge } from '@/components/ui'
+import { Card, Button, Input, SectionHeading, Badge, Toggle } from '@/components/ui'
+import { useAccessibility } from '@/lib/accessibility/accessibilityContext'
+import { useLocalization } from '@/lib/i18n/localizationContext'
 import { createClient } from '@/lib/supabase/client'
 import { getUserProfile, saveUserProfile } from '@/lib/profileService'
 import type {
@@ -62,6 +69,8 @@ const DIET_OPTIONS: DietaryPreference[] = [
 ]
 
 export function SettingsContent() {
+  const { preferences, setHighContrast, setReducedMotion, setFontScale, setShowBeginnerCues } = useAccessibility()
+  const { language, unitSystem, setLanguage, setUnitSystem } = useLocalization()
   const [userId, setUserId] = useState<string>('demo-user')
   const [userEmail, setUserEmail] = useState<string>('')
   const [isLoading, setIsLoading] = useState(true)
@@ -467,6 +476,149 @@ export function SettingsContent() {
                     </button>
                   )
                 })}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Language & Unit Preferences */}
+        <Card>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-lime-400/10 border border-lime-400/20 text-lime-400 flex items-center justify-center shrink-0">
+              <Globe size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Language & Regional Preferences</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Indian native script support and customized measurement systems.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-5">
+            <div>
+              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block mb-2">
+                Interface Language
+              </label>
+              <div className="grid grid-cols-3 gap-2.5">
+                {(
+                  [
+                    { id: 'en', label: 'English', sub: 'Global' },
+                    { id: 'kn', label: 'ಕನ್ನಡ', sub: 'Kannada' },
+                    { id: 'hi', label: 'हिंदी', sub: 'Hindi' },
+                  ] as const
+                ).map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => setLanguage(item.id)}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      language === item.id
+                        ? 'bg-lime-400/15 border-lime-400 text-white font-bold'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-sm">{item.label}</div>
+                    <div className="text-[10px] text-zinc-500">{item.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pt-2">
+              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block mb-2">
+                Measurement System
+              </label>
+              <div className="grid grid-cols-2 gap-2.5">
+                {(
+                  [
+                    { id: 'metric', label: 'Metric', sub: 'kg, cm, liters' },
+                    { id: 'imperial', label: 'Imperial', sub: 'lbs, ft/in, fl oz' },
+                  ] as const
+                ).map((unit) => (
+                  <button
+                    key={unit.id}
+                    type="button"
+                    onClick={() => setUnitSystem(unit.id)}
+                    className={`p-3 rounded-xl border text-left transition ${
+                      unitSystem === unit.id
+                        ? 'bg-lime-400/15 border-lime-400 text-white font-bold'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    <div className="text-sm">{unit.label}</div>
+                    <div className="text-[10px] text-zinc-500">{unit.sub}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </Card>
+
+        {/* Accessibility & Inclusive Fitness */}
+        <Card>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-lime-400/10 border border-lime-400/20 text-lime-400 flex items-center justify-center shrink-0">
+              <Sliders size={20} />
+            </div>
+            <div>
+              <h2 className="text-base font-bold text-white">Accessibility & Inclusive Fitness</h2>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Sensory comfort, typography scaling, high contrast and beginner guidance.
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
+              <div>
+                <span className="text-sm font-semibold text-white block">High Contrast Mode</span>
+                <span className="text-xs text-zinc-400">Deep black backdrops with high-luminance borders</span>
+              </div>
+              <Toggle checked={preferences.highContrast} onChange={setHighContrast} />
+            </div>
+
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
+              <div>
+                <span className="text-sm font-semibold text-white block">Reduced Motion</span>
+                <span className="text-xs text-zinc-400">Disables animations and transitions for vestibular ease</span>
+              </div>
+              <Toggle checked={preferences.reducedMotion} onChange={setReducedMotion} />
+            </div>
+
+            <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
+              <div>
+                <span className="text-sm font-semibold text-white block">Beginner Movement Cues</span>
+                <span className="text-xs text-zinc-400">Provides form tips and safe exercise alternatives</span>
+              </div>
+              <Toggle checked={preferences.showBeginnerCues} onChange={setShowBeginnerCues} />
+            </div>
+
+            <div className="pt-2">
+              <label className="text-xs font-semibold text-zinc-300 uppercase tracking-wider block mb-2">
+                Font Scaling
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { id: 'normal', label: '100% Default' },
+                    { id: 'large', label: '110% Large' },
+                    { id: 'xl', label: '120% Extra Large' },
+                  ] as const
+                ).map((scale) => (
+                  <button
+                    key={scale.id}
+                    type="button"
+                    onClick={() => setFontScale(scale.id)}
+                    className={`p-2.5 rounded-xl border text-xs font-semibold text-center transition ${
+                      preferences.fontScale === scale.id
+                        ? 'bg-lime-400 text-zinc-950 border-lime-400'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {scale.label}
+                  </button>
+                ))}
               </div>
             </div>
           </div>

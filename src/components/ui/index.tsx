@@ -407,5 +407,28 @@ export const Divider: React.FC<{ className?: string }> = ({ className = '' }) =>
 export { Modal } from './Modal'
 export { ToastProvider, useToast } from './Toast'
 export type { ToastType, ToastMessage } from './Toast'
+export { PageLoadingFallback } from './PageLoadingFallback'
+
+// ─── Design System 2.0 Primitives ─────────────────────────────────────────────
+export { Select } from './Select'
+export type { SelectProps, SelectOption } from './Select'
+export { Textarea } from './Textarea'
+export type { TextareaProps } from './Textarea'
+export { Toggle } from './Toggle'
+export type { ToggleProps } from './Toggle'
+export { Checkbox } from './Checkbox'
+export type { CheckboxProps } from './Checkbox'
+export { Skeleton, CardSkeleton, StatCardSkeleton } from './Skeleton'
+export type { SkeletonProps } from './Skeleton'
+export { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from './Table'
+export { InlineErrorBanner, FormField } from './InlineError'
+export type { InlineErrorBannerProps, FormFieldProps } from './InlineError'
+export { ChartCard, DarkChartTooltip } from './ChartCard'
+export type { ChartCardProps, DarkTooltipProps } from './ChartCard'
+export { AccessibleChartSummary } from '@/components/accessibility/AccessibleChartSummary'
+export type { AccessibleChartSummaryProps } from '@/components/accessibility/AccessibleChartSummary'
+export { AccessibleStatusBadge } from '@/components/accessibility/AccessibleStatusBadge'
+export type { AccessibleStatus } from '@/components/accessibility/AccessibleStatusBadge'
+
 
 

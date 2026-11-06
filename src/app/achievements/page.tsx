@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { AchievementsContent } from './AchievementsContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const AchievementsContent = dynamic(
+  () => import('./AchievementsContent').then((mod) => mod.AchievementsContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading achievements & RPG badges..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Achievements & Badges | YashFit RPG',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function AchievementsPage() {
-  return <AchievementsContent />
+  return (
+    <AppShell>
+      <AchievementsContent />
+    </AppShell>
+  )
 }
-

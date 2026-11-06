@@ -1,6 +1,14 @@
-import React from 'react'
 import type { Metadata } from 'next'
-import { BodyIntelligenceContent } from './BodyIntelligenceContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const BodyIntelligenceContent = dynamic(
+  () => import('./BodyIntelligenceContent').then((mod) => mod.BodyIntelligenceContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading Body Composition Intelligence..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'AI Body Composition Intelligence | YashFit',
@@ -10,9 +18,8 @@ export const metadata: Metadata = {
 
 export default function BodyIntelligencePage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <AppShell>
       <BodyIntelligenceContent />
-    </div>
+    </AppShell>
   )
 }
-

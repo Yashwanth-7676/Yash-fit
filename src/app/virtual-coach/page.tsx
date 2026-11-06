@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { VirtualCoachContent } from './VirtualCoachContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const VirtualCoachContent = dynamic(
+  () => import('./VirtualCoachContent').then((mod) => mod.VirtualCoachContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading AI virtual personal trainer..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'AI Virtual Personal Trainer | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function VirtualCoachPage() {
-  return <VirtualCoachContent />
+  return (
+    <AppShell>
+      <VirtualCoachContent />
+    </AppShell>
+  )
 }
-

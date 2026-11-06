@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { AvatarStudioContent } from './AvatarStudioContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const AvatarStudioContent = dynamic(
+  () => import('./AvatarStudioContent').then((mod) => mod.AvatarStudioContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading RPG anime avatar studio..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Anime Avatar Studio | YashFit RPG',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function AvatarPage() {
-  return <AvatarStudioContent />
+  return (
+    <AppShell>
+      <AvatarStudioContent />
+    </AppShell>
+  )
 }
-

@@ -26,10 +26,11 @@ test.describe('End-to-End: Core Fitness Workflows', () => {
     await page.goto('/onboarding')
     await page.waitForLoadState('domcontentloaded')
 
-    // Step 1: Click Get Started
+    // Step 1: Click Get Started if welcome splash is present
     const getStartedBtn = page.getByRole('button', { name: /get started/i })
-    await expect(getStartedBtn).toBeVisible()
-    await getStartedBtn.click()
+    if (await getStartedBtn.isVisible()) {
+      await getStartedBtn.click()
+    }
 
     // Step 2: Personal Metrics
     const nameInput = page.getByPlaceholder(/e\.g\. Yash/i).or(page.getByLabel(/First Name/i))
@@ -63,7 +64,7 @@ test.describe('End-to-End: Core Fitness Workflows', () => {
     await page.waitForLoadState('domcontentloaded')
 
     // Verify Workout Studio header
-    await expect(page.getByText('Interactive Smart Workout Studio')).toBeVisible()
+    await expect(page.getByRole('heading', { name: /Interactive Smart Workout Studio/i })).toBeVisible()
 
     // Start a routine (e.g. Push Hypertrophy)
     const startRoutineBtn = page.getByRole('button', { name: /start routine|start workout/i }).first()

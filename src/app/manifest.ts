@@ -4,18 +4,17 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: 'YashFit — Personal Fitness Operating System',
     short_name: 'YashFit',
-    description: 'Your Fitness. Smarter Every Day. Adaptive workouts, Indian nutrition, and recovery intelligence.',
-    start_url: '/',
+    description: 'Evidence-based personal fitness OS with AI workout programming, Indian nutrition, and recovery intelligence.',
+    start_url: '/dashboard',
     display: 'standalone',
     background_color: '#09090b',
-    theme_color: '#09090b',
+    theme_color: '#a3e635',
     icons: [
       {
-        src: '/icon.svg',
+        src: '/favicon.ico',
         sizes: 'any',
-        type: 'image/svg+xml',
+        type: 'image/x-icon',
       },
     ],
   }
 }
-

@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { TransformationContent } from './TransformationContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const TransformationContent = dynamic(
+  () => import('./TransformationContent').then((mod) => mod.TransformationContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading transformation intelligence..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Body Transformation Intelligence | YashFit',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function TransformationPage() {
-  return <TransformationContent />
+  return (
+    <AppShell>
+      <TransformationContent />
+    </AppShell>
+  )
 }
-

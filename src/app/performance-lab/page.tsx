@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { PerformanceLabContent } from './PerformanceLabContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const PerformanceLabContent = dynamic(
+  () => import('./PerformanceLabContent').then((mod) => mod.PerformanceLabContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading fitness performance lab..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Fitness Performance Lab | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function PerformanceLabPage() {
-  return <PerformanceLabContent />
+  return (
+    <AppShell>
+      <PerformanceLabContent />
+    </AppShell>
+  )
 }
-

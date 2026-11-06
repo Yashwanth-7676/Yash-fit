@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { FitnessIntelligenceContent } from './FitnessIntelligenceContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const FitnessIntelligenceContent = dynamic(
+  () => import('./FitnessIntelligenceContent').then((mod) => mod.FitnessIntelligenceContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading fitness intelligence graph..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Personal Fitness Intelligence Graph | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function FitnessIntelligencePage() {
-  return <FitnessIntelligenceContent />
+  return (
+    <AppShell>
+      <FitnessIntelligenceContent />
+    </AppShell>
+  )
 }
-

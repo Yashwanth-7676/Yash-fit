@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { SmartGroceryContent } from './SmartGroceryContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const SmartGroceryContent = dynamic(
+  () => import('./SmartGroceryContent').then((mod) => mod.SmartGroceryContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading smart grocery & budget optimizer..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Smart Grocery & Budget Intelligence | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function SmartGroceryPage() {
-  return <SmartGroceryContent />
+  return (
+    <AppShell>
+      <SmartGroceryContent />
+    </AppShell>
+  )
 }
-

@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { NutritionPlannerContent } from './NutritionPlannerContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const NutritionPlannerContent = dynamic(
+  () => import('./NutritionPlannerContent').then((mod) => mod.NutritionPlannerContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading Indian nutrition planner..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Indian Nutrition Planner | YashFit',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function NutritionPlannerPage() {
-  return <NutritionPlannerContent />
+  return (
+    <AppShell>
+      <NutritionPlannerContent />
+    </AppShell>
+  )
 }
-

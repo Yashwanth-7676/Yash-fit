@@ -205,6 +205,11 @@ export function PoseCameraFeed({
     let lastVideoTime = -1
 
     const renderLoop = () => {
+      if (document.hidden) {
+        animFrameRef.current = requestAnimationFrame(renderLoop)
+        return
+      }
+
       const video = videoRef.current
       const canvas = canvasRef.current
       const landmarker = landmarkerRef.current

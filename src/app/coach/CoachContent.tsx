@@ -17,6 +17,7 @@ import {
   RefreshCw,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, useToast } from '@/components/ui'
+import { PersonalizationHub } from '@/components/personalization/PersonalizationHub'
 import type { CoachChatMessage } from '@/types/coach'
 import type { StructuredCoachResponse } from '@/types/commandCenter'
 
@@ -34,6 +35,7 @@ const LOCAL_STORAGE_KEY = 'yashfit_coach_chat_history'
 
 export function CoachContent() {
   const toast = useToast()
+  const [activeTab, setActiveTab] = useState<'personalization' | 'chat'>('personalization')
   const [messages, setMessages] = useState<CoachChatMessage[]>([])
   const [inputQuery, setInputQuery] = useState('')
   const [loading, setLoading] = useState(false)
@@ -215,7 +217,37 @@ export function CoachContent() {
         </div>
       </div>
 
-      {/* Suggested Prompt Chips */}
+      {/* Tab Navigation */}
+      <div className="flex items-center gap-2 border-b border-zinc-800 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('personalization')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'personalization'
+              ? 'bg-lime-400 text-zinc-950'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+          }`}
+        >
+          AI Personalization Engine
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('chat')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'chat'
+              ? 'bg-lime-400 text-zinc-950'
+              : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
+          }`}
+        >
+          Interactive Coach Chat
+        </button>
+      </div>
+
+      {activeTab === 'personalization' ? (
+        <PersonalizationHub />
+      ) : (
+        <>
+          {/* Suggested Prompt Chips */}
       <div className="space-y-1.5">
         <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-500 block">
           Key Coach Consultations
@@ -407,6 +439,8 @@ export function CoachContent() {
           <Send size={16} className="mr-1.5" /> Send
         </Button>
       </form>
+        </>
+      )}
     </div>
   )
 }

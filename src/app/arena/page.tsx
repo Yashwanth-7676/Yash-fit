@@ -1,5 +1,14 @@
-import { Metadata } from 'next'
-import { ArenaContent } from './ArenaContent'
+import type { Metadata } from 'next'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const ArenaContent = dynamic(
+  () => import('./ArenaContent').then((mod) => mod.ArenaContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading Global Fitness Arena..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Global Fitness Arena | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function ArenaPage() {
-  return <ArenaContent />
+  return (
+    <AppShell>
+      <ArenaContent />
+    </AppShell>
+  )
 }
-

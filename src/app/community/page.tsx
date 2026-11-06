@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { CommunityContent } from './CommunityContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const CommunityContent = dynamic(
+  () => import('./CommunityContent').then((mod) => mod.CommunityContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading YashFit Community Feed..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Social Fitness Community & Challenges | YashFit',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function CommunityPage() {
-  return <CommunityContent />
+  return (
+    <AppShell>
+      <CommunityContent />
+    </AppShell>
+  )
 }
-

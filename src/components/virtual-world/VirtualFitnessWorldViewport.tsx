@@ -351,6 +351,11 @@ export function VirtualFitnessWorldViewport({
     const clock = new THREE.Clock()
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate)
+
+      if (document.hidden) {
+        return
+      }
+
       const elapsed = clock.getElapsedTime()
 
       if (controlsRef.current) {

@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { ReportsContent } from './ReportsContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const ReportsContent = dynamic(
+  () => import('./ReportsContent').then((mod) => mod.ReportsContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading fitness intelligence reports..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Fitness Intelligence Reports | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function ReportsPage() {
-  return <ReportsContent />
+  return (
+    <AppShell>
+      <ReportsContent />
+    </AppShell>
+  )
 }
-

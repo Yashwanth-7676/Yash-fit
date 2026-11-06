@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { LifestyleContent } from './LifestyleContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const LifestyleContent = dynamic(
+  () => import('./LifestyleContent').then((mod) => mod.LifestyleContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading AI lifestyle optimizer..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'AI Lifestyle Optimization | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function LifestylePage() {
-  return <LifestyleContent />
+  return (
+    <AppShell>
+      <LifestyleContent />
+    </AppShell>
+  )
 }
-

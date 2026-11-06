@@ -27,6 +27,64 @@ html {
   outline-offset: 2px;
 }
 
+/* Accessibility: High Contrast */
+.high-contrast {
+  --background: #000000;
+  --foreground: #ffffff;
+}
+
+.high-contrast :focus-visible {
+  outline: 3px solid #ffffff !important;
+  outline-offset: 3px !important;
+}
+
+.high-contrast .border-zinc-800,
+.high-contrast .border-zinc-700 {
+  border-color: #a1a1aa !important;
+}
+
+.high-contrast .text-zinc-400,
+.high-contrast .text-zinc-500 {
+  color: #e4e4e7 !important;
+}
+
+.high-contrast .bg-zinc-900,
+.high-contrast .bg-zinc-950 {
+  background-color: #09090b !important;
+}
+
+/* Accessibility: Reduced Motion */
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Accessibility: Scalable Typography */
+.font-scale-large {
+  font-size: 110%;
+}
+
+.font-scale-xl {
+  font-size: 120%;
+}
+
+/* Accessibility: Color Blind Modes */
+.cb-protanopia {
+  filter: contrast(110%) saturate(85%);
+}
+
+.cb-deuteranopia {
+  filter: contrast(105%) brightness(105%);
+}
+
+.cb-tritanopia {
+  filter: contrast(115%) saturate(95%);
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 6px;

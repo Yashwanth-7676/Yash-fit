@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { TrainerContent } from './TrainerContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const TrainerContent = dynamic(
+  () => import('./TrainerContent').then((mod) => mod.TrainerContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading professional trainer workspace..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Professional Trainer Workspace | YashFit',
@@ -8,6 +17,9 @@ export const metadata: Metadata = {
 }
 
 export default function TrainerPage() {
-  return <TrainerContent />
+  return (
+    <AppShell>
+      <TrainerContent />
+    </AppShell>
+  )
 }
-

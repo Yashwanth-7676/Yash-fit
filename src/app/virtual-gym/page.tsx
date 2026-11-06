@@ -1,6 +1,14 @@
 import type { Metadata } from 'next'
-import { Suspense } from 'react'
-import { VirtualGymContent } from './VirtualGymContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const VirtualGymContent = dynamic(
+  () => import('./VirtualGymContent').then((mod) => mod.VirtualGymContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading 3D virtual gym & muscle biomechanics..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: '3D Virtual Gym & Interactive Muscle Intelligence | YashFit',
@@ -10,18 +18,8 @@ export const metadata: Metadata = {
 
 export default function VirtualGymPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="w-full min-h-[500px] flex items-center justify-center">
-          <div className="flex flex-col items-center gap-3">
-            <div className="w-8 h-8 rounded-full border-2 border-lime-400 border-t-transparent animate-spin" />
-            <p className="text-sm text-zinc-400">Loading 3D Virtual Gym...</p>
-          </div>
-        </div>
-      }
-    >
+    <AppShell>
       <VirtualGymContent />
-    </Suspense>
+    </AppShell>
   )
 }
-

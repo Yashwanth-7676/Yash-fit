@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { DailyPlanContent } from './DailyPlanContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const DailyPlanContent = dynamic(
+  () => import('./DailyPlanContent').then((mod) => mod.DailyPlanContent),
+  {
+    loading: () => <PageLoadingFallback label="Synthesizing daily fitness agenda..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Fitness Life Autopilot & Daily Agenda | YashFit',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function DailyPlanPage() {
-  return <DailyPlanContent />
+  return (
+    <AppShell>
+      <DailyPlanContent />
+    </AppShell>
+  )
 }
-

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { ToastProvider } from '@/components/ui'
+import { AppProviders } from '@/components/providers/AppProviders'
 import './globals.css'
 
 const inter = {
@@ -66,7 +66,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className={`${inter.className} min-h-screen bg-zinc-950 text-white antialiased`}>
-        <ToastProvider>{children}</ToastProvider>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   )

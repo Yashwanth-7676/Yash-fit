@@ -283,6 +283,10 @@ export function VirtualGymViewport({
     const animate = () => {
       animFrameRef.current = requestAnimationFrame(animate)
 
+      if (document.hidden) {
+        return
+      }
+
       if (controlsRef.current) {
         controlsRef.current.update()
       }

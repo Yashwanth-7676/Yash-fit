@@ -1,5 +1,14 @@
 import type { Metadata } from 'next'
-import { IntegrationsContent } from './IntegrationsContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const IntegrationsContent = dynamic(
+  () => import('./IntegrationsContent').then((mod) => mod.IntegrationsContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading wearable integrations hub..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Wearable Intelligence Hub & Health Bridges | YashFit',
@@ -7,6 +16,9 @@ export const metadata: Metadata = {
 }
 
 export default function IntegrationsPage() {
-  return <IntegrationsContent />
+  return (
+    <AppShell>
+      <IntegrationsContent />
+    </AppShell>
+  )
 }
-

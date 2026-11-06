@@ -24,6 +24,11 @@ export function BiomechanicalAnimator({
     const cycleDurationMs = 3200 / playbackSpeed // ~3.2 seconds per repetition
 
     const loop = (timestamp: number) => {
+      if (document.hidden) {
+        animFrameRef.current = requestAnimationFrame(loop)
+        return
+      }
+
       if (lastTimeRef.current === null) lastTimeRef.current = timestamp
       const delta = timestamp - lastTimeRef.current
       lastTimeRef.current = timestamp

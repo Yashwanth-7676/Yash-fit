@@ -1,6 +1,14 @@
-import React from 'react'
 import type { Metadata } from 'next'
-import { CompanionContent } from './CompanionContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const CompanionContent = dynamic(
+  () => import('./CompanionContent').then((mod) => mod.CompanionContent),
+  {
+    loading: () => <PageLoadingFallback label="Initializing Astra AI Companion..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Personal AI Fitness Companion | YashFit',
@@ -10,9 +18,8 @@ export const metadata: Metadata = {
 
 export default function CompanionPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <AppShell>
       <CompanionContent />
-    </div>
+    </AppShell>
   )
 }
-

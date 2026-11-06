@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { useState } from 'react'
 import {
   LayoutDashboard,
+  Bell,
   Dumbbell,
   Salad,
   Activity,
@@ -46,6 +47,9 @@ import {
 } from 'lucide-react'
 import { YashFitLogo } from '@/components/YashFitLogo'
 import { NotificationBell } from '@/components/social/NotificationBell'
+import { AccessibilityControls } from '@/components/accessibility/AccessibilityControls'
+import { LanguageUnitSelector } from '@/components/i18n/LanguageUnitSelector'
+import { SyncStatusBanner } from '@/components/offline/SyncStatusBanner'
 
 export interface NavItem {
   label: string
@@ -267,6 +271,12 @@ const navItems: NavItem[] = [
     badge: 'Forecast',
   },
   {
+    label: 'Notifications',
+    href: '/notifications',
+    icon: <Bell size={18} />,
+    badge: 'Alerts',
+  },
+  {
     label: 'Settings',
     href: '/settings',
     icon: <Settings size={18} />,
@@ -355,9 +365,18 @@ export function SidebarContent({ onClose }: SidebarContentProps) {
         </ul>
       </nav>
 
+      {/* Accessibility, Localization & Sync Bar */}
+      <div className="px-3 py-2.5 border-t border-zinc-800/80 flex items-center justify-between gap-1.5 bg-zinc-950/40">
+        <LanguageUnitSelector />
+        <div className="flex items-center gap-1">
+          <AccessibilityControls />
+          <SyncStatusBanner />
+        </div>
+      </div>
+
       {/* Bottom */}
-      <div className="px-4 py-4 border-t border-zinc-800">
-        <p className="text-xs text-lime-400 font-semibold tracking-wide">YashFit OS</p>
+      <div className="px-4 py-3 border-t border-zinc-800">
+        <p className="text-xs text-lime-400 font-semibold tracking-wide">YashFit OS 2.0</p>
         <p className="text-xs text-zinc-500 mt-0.5">Your Fitness. Smarter Every Day.</p>
       </div>
     </div>
@@ -420,18 +439,26 @@ interface MobileTopBarProps {
 
 export function MobileTopBar({ onMenuOpen }: MobileTopBarProps) {
   return (
-    <header className="lg:hidden flex items-center justify-between px-4 h-14 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-30">
-      <button
-        onClick={onMenuOpen}
-        className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
-        aria-label="Open navigation menu"
-      >
-        <Menu size={20} />
-      </button>
-      <Link href="/dashboard" aria-label="YashFit Dashboard">
-        <YashFitLogo compact />
-      </Link>
-      <NotificationBell />
+    <header className="lg:hidden flex items-center justify-between px-3 h-14 border-b border-zinc-800 bg-zinc-950 sticky top-0 z-30">
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={onMenuOpen}
+          className="p-2 rounded-md text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
+          aria-label="Open navigation menu"
+        >
+          <Menu size={20} />
+        </button>
+        <Link href="/dashboard" aria-label="YashFit Dashboard">
+          <YashFitLogo compact />
+        </Link>
+      </div>
+
+      <div className="flex items-center gap-1.5">
+        <LanguageUnitSelector />
+        <AccessibilityControls />
+        <SyncStatusBanner />
+        <NotificationBell />
+      </div>
     </header>
   )
 }
@@ -446,7 +473,15 @@ export function AppShell({ children }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
   return (
-    <div className="flex h-screen bg-zinc-950 overflow-hidden">
+    <div className="flex h-screen bg-zinc-950 overflow-hidden relative">
+      {/* Skip to Main Content Link for Keyboard and Screen Reader Accessibility */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:px-4 focus:py-2 focus:bg-lime-400 focus:text-zinc-950 focus:font-bold focus:rounded-xl focus:shadow-2xl focus:border-2 focus:border-zinc-950"
+      >
+        Skip to main content
+      </a>
+
       <DesktopSidebar />
       <MobileSidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       <div className="flex-1 flex flex-col min-w-0 overflow-auto">

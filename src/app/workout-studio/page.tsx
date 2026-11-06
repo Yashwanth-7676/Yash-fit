@@ -1,6 +1,14 @@
-import React from 'react'
 import type { Metadata } from 'next'
-import { WorkoutStudioContent } from './WorkoutStudioContent'
+import dynamic from 'next/dynamic'
+import { AppShell } from '@/components/AppShell'
+import { PageLoadingFallback } from '@/components/ui'
+
+const WorkoutStudioContent = dynamic(
+  () => import('./WorkoutStudioContent').then((mod) => mod.WorkoutStudioContent),
+  {
+    loading: () => <PageLoadingFallback label="Loading interactive smart workout studio..." />,
+  }
+)
 
 export const metadata: Metadata = {
   title: 'Interactive Smart Workout Studio | YashFit',
@@ -10,9 +18,8 @@ export const metadata: Metadata = {
 
 export default function WorkoutStudioPage() {
   return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
+    <AppShell>
       <WorkoutStudioContent />
-    </div>
+    </AppShell>
   )
 }
-

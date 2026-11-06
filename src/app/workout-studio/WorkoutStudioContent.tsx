@@ -14,8 +14,11 @@ import {
   Shuffle,
   ChevronRight,
   Check,
+  Info,
 } from 'lucide-react'
 import { Card, Badge, Button, Modal, useToast } from '@/components/ui'
+import { useAccessibility } from '@/lib/accessibility/accessibilityContext'
+import { useOfflineSync } from '@/lib/offline/offlineContext'
 import { BiomechanicalAnimator } from '@/components/workout-studio/BiomechanicalAnimator'
 import {
   DEFAULT_STUDIO_ROUTINES,
@@ -32,6 +35,8 @@ import type {
 
 export function WorkoutStudioContent() {
   const toast = useToast()
+  const { preferences } = useAccessibility()
+  const { enqueue } = useOfflineSync()
 
   // Routine selection & state
   const [workoutState, setWorkoutState] = useState<StudioWorkoutState | null>(null)
@@ -272,6 +277,20 @@ export function WorkoutStudioContent() {
     const summary = completeStudioSession(workoutState)
     setSummaryData(summary)
     setIsSummaryOpen(true)
+
+    // Enqueue for reliable offline-first synchronization
+    enqueue(
+      'LOG_WORKOUT',
+      {
+        routineName: summary.routineName,
+        totalVolumeKg: summary.totalVolumeKg,
+        totalSetsCompleted: summary.totalSetsCompleted,
+        durationMinutes: summary.durationMinutes,
+        completedAt: new Date().toISOString(),
+      },
+      summary.sessionId
+    )
+
     speakStudioCue(
       `Outstanding work! You completed ${summary.totalSetsCompleted} sets and moved over ${summary.totalVolumeKg} kilograms!`,
       workoutState.voiceEnabled
@@ -536,6 +555,16 @@ export function WorkoutStudioContent() {
                   <span className="font-semibold text-zinc-200">Breathing: </span>
                   {currentExercise.breathingGuidance}
                 </div>
+
+                {/* Beginner Cues (Accessibility & Inclusive Fitness) */}
+                {preferences.showBeginnerCues && (
+                  <div className="p-2.5 rounded-lg bg-lime-400/10 border border-lime-400/30 text-xs text-lime-300">
+                    <span className="font-bold flex items-center gap-1.5 mb-1">
+                      <Info size={14} /> Beginner Safety Cue
+                    </span>
+                    Maintain controlled tempo (2s lowering, 1s lift). If you feel joint discomfort, reduce load or tap Substitute above for a joint-friendly variant.
+                  </div>
+                )}
               </Card>
             </div>
 

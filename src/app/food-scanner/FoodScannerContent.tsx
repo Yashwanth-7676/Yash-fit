@@ -15,6 +15,9 @@ import {
   Info,
 } from 'lucide-react'
 import { Card, Badge, Button, Input, Modal, useToast } from '@/components/ui'
+import { useOfflineSync } from '@/lib/offline/offlineContext'
+import { useLocalization } from '@/lib/i18n/localizationContext'
+import { REGIONAL_INDIAN_FOODS } from '@/lib/i18n/localizationService'
 import {
   calculateScannedMealTotals,
   getScannedMealHistory,
@@ -32,6 +35,8 @@ import type {
 
 export function FoodScannerContent() {
   const toast = useToast()
+  const { enqueue } = useOfflineSync()
+  const { language } = useLocalization()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // State
@@ -187,6 +192,22 @@ export function FoodScannerContent() {
 
     saveScannedMeal(newScannedMeal)
     setScanHistory(getScannedMealHistory())
+
+    // Enqueue for offline sync
+    enqueue(
+      'LOG_MEAL',
+      {
+        mealType: selectedMealType,
+        totalCalories: mealTotals.calories,
+        totalProtein: mealTotals.protein,
+        totalCarbs: mealTotals.carbs,
+        totalFats: mealTotals.fats,
+        totalFiber: mealTotals.fiber,
+        itemsCount: detectedItems.length,
+        timestamp: newScannedMeal.timestamp,
+      },
+      newScannedMeal.id
+    )
 
     toast.success(
       'Meal Logged to Nutrition Tracker',
@@ -691,7 +712,21 @@ export function FoodScannerContent() {
                 className="p-3 rounded-xl bg-zinc-950/80 hover:bg-zinc-800/80 border border-zinc-800 cursor-pointer transition-colors flex items-center justify-between gap-3"
               >
                 <div>
-                  <span className="text-xs font-semibold text-white block">{dish.name}</span>
+                  <span className="text-xs font-semibold text-white block">
+                    {dish.name}
+                    {language !== 'en' && (() => {
+                      const regional = REGIONAL_INDIAN_FOODS.find(
+                        (f) =>
+                          dish.name.toLowerCase().includes(f.id.replace('-', ' ')) ||
+                          f.en.toLowerCase().includes(dish.name.toLowerCase())
+                      )
+                      return regional ? (
+                        <span className="text-lime-400 font-normal ml-1.5">
+                          ({regional[language]})
+                        </span>
+                      ) : null
+                    })()}
+                  </span>
                   <span className="text-[11px] text-zinc-400">{dish.servingSize}</span>
                 </div>
                 <div className="text-right font-mono text-xs shrink-0">
