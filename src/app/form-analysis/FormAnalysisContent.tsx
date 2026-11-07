@@ -21,6 +21,9 @@ const EXERCISE_OPTIONS: { id: SupportedVisionExercise; label: string; primaryMus
   { id: 'lunge', label: 'Stationary / Walking Lunge', primaryMuscle: 'Glutes', matchingId: 'ex-dumbbell-walking-lunge' },
   { id: 'plank', label: 'Forearm Plank Hold', primaryMuscle: 'Core', matchingId: 'ex-plank' },
   { id: 'bicep_curl', label: 'Dumbbell Bicep Curl', primaryMuscle: 'Biceps', matchingId: 'ex-dumbbell-bicep-curl' },
+  { id: 'shoulder_press', label: 'Overhead Shoulder Press', primaryMuscle: 'Shoulders', matchingId: 'ex-barbell-overhead-press' },
+  { id: 'deadlift', label: 'Romanian Deadlift', primaryMuscle: 'Hamstrings', matchingId: 'ex-barbell-deadlift' },
+  { id: 'jumping_jack', label: 'Dynamic Jumping Jacks', primaryMuscle: 'Cardio', matchingId: 'ex-jumping-jacks' },
 ]
 
 export function FormAnalysisContent() {

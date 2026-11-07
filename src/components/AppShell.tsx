@@ -113,6 +113,18 @@ const navItems: NavItem[] = [
     badge: 'Live',
   },
   {
+    label: 'MotionVerse AI',
+    href: '/motionverse',
+    icon: <Sparkles size={18} />,
+    badge: '3D AI',
+  },
+  {
+    label: 'AI Vision Trainer',
+    href: '/ai-trainer',
+    icon: <Camera size={18} />,
+    badge: 'Vision',
+  },
+  {
     label: 'Autopilot',
     href: '/training-autopilot',
     icon: <Compass size={18} />,

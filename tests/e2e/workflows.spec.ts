@@ -119,4 +119,22 @@ test.describe('End-to-End: Core Fitness Workflows', () => {
     const firstNameInput = page.getByLabel(/First Name/i)
     await expect(firstNameInput).toBeVisible()
   })
+
+  test('8. AI Vision & Real-Time Personal Trainer', async ({ page }) => {
+    await page.goto('/ai-trainer')
+    await page.waitForLoadState('domcontentloaded')
+
+    // Verify page heading and privacy badge
+    await expect(page.getByRole('heading', { name: /AI Vision & Real-Time Personal Trainer/i })).toBeVisible()
+    await expect(page.getByText(/100% On-Device Local AI/i)).toBeVisible()
+
+    // Verify exercise selection buttons (Squat, Push-Up, etc.)
+    await expect(page.getByRole('button', { name: /Squat/i }).first()).toBeVisible()
+    await expect(page.getByRole('button', { name: /Push-Up/i })).toBeVisible()
+    await expect(page.getByRole('button', { name: /Forearm Plank/i })).toBeVisible()
+
+    // Verify Start Camera Coach button and manual rep fallback
+    await expect(page.getByRole('button', { name: /Start Camera Coach/i })).toBeVisible()
+    await expect(page.getByText(/Or log reps manually without camera/i)).toBeVisible()
+  })
 })

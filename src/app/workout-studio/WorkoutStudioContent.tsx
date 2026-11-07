@@ -15,11 +15,15 @@ import {
   ChevronRight,
   Check,
   Info,
+  Camera,
 } from 'lucide-react'
 import { Card, Badge, Button, Modal, useToast } from '@/components/ui'
 import { useAccessibility } from '@/lib/accessibility/accessibilityContext'
 import { useOfflineSync } from '@/lib/offline/offlineContext'
 import { BiomechanicalAnimator } from '@/components/workout-studio/BiomechanicalAnimator'
+import { MotionVersePlayer } from '@/components/motionverse/MotionVersePlayer'
+import { PoseCameraFeed } from '@/components/vision/PoseCameraFeed'
+import type { SupportedVisionExercise } from '@/types/pose'
 import {
   DEFAULT_STUDIO_ROUTINES,
   speakStudioCue,
@@ -37,6 +41,9 @@ export function WorkoutStudioContent() {
   const toast = useToast()
   const { preferences } = useAccessibility()
   const { enqueue } = useOfflineSync()
+
+  // Visualizer Mode: MotionVerse 3D Engine vs Classic 2D Kinematics vs Live AI Camera
+  const [visualizerMode, setVisualizerMode] = useState<'motionverse' | 'classic' | 'ai_camera'>('motionverse')
 
   // Routine selection & state
   const [workoutState, setWorkoutState] = useState<StudioWorkoutState | null>(null)
@@ -135,6 +142,20 @@ export function WorkoutStudioContent() {
     if (!workoutState) return null
     return workoutState.exercises[workoutState.currentExerciseIndex] || null
   }, [workoutState])
+
+  // Map routine motionCycleKey to vision exercise
+  const mappedVisionExercise: SupportedVisionExercise = useMemo(() => {
+    const key = (currentExercise?.motionCycleKey || '').toLowerCase()
+    if (key.includes('squat')) return 'squat'
+    if (key.includes('pushup') || key.includes('push_up') || key.includes('pushdown')) return 'push_up'
+    if (key.includes('lunge')) return 'lunge'
+    if (key.includes('curl')) return 'bicep_curl'
+    if (key.includes('press')) return 'shoulder_press'
+    if (key.includes('deadlift')) return 'deadlift'
+    if (key.includes('jack')) return 'jumping_jack'
+    if (key.includes('plank')) return 'plank'
+    return 'squat'
+  }, [currentExercise?.motionCycleKey])
 
   // Progress metrics
   const progressMetrics = useMemo(() => {
@@ -501,13 +522,100 @@ export function WorkoutStudioContent() {
 
           {/* Two-Column Studio Layout */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left 5 Cols: Biomechanical Kinematics & Cues */}
+            {/* Left 5 Cols: Biomechanical Kinematics & MotionVerse Engine */}
             <div className="lg:col-span-5 space-y-4">
-              <BiomechanicalAnimator
-                motionKey={currentExercise.motionCycleKey}
-                exerciseName={currentExercise.name}
-                isPaused={workoutState.isPaused}
-              />
+              <div className="flex items-center justify-between pb-1">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-bold text-white uppercase tracking-wider">
+                    {visualizerMode === 'motionverse'
+                      ? 'MotionVerse AI Engine'
+                      : visualizerMode === 'ai_camera'
+                      ? 'AI Vision Camera'
+                      : 'Classic 2D Kinematics'}
+                  </span>
+                  <Badge variant="accent" className="text-[10px]">
+                    {visualizerMode === 'motionverse'
+                      ? '3D / Anime'
+                      : visualizerMode === 'ai_camera'
+                      ? 'Live Vision'
+                      : '2D Vector'}
+                  </Badge>
+                </div>
+                <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setVisualizerMode('motionverse')}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${
+                      visualizerMode === 'motionverse'
+                        ? 'bg-lime-400 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    MotionVerse
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisualizerMode('ai_camera')}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${
+                      visualizerMode === 'ai_camera'
+                        ? 'bg-lime-400 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    AI Camera
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisualizerMode('classic')}
+                    className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition ${
+                      visualizerMode === 'classic'
+                        ? 'bg-lime-400 text-zinc-950 font-bold'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    Classic
+                  </button>
+                </div>
+              </div>
+
+              {visualizerMode === 'motionverse' ? (
+                <MotionVersePlayer
+                  exerciseId={
+                    currentExercise.motionCycleKey === 'bent_over_row'
+                      ? 'barbell_row'
+                      : currentExercise.motionCycleKey === 'goblet_squat'
+                      ? 'squat'
+                      : currentExercise.motionCycleKey === 'tricep_pushdown'
+                      ? 'push_up'
+                      : currentExercise.motionCycleKey
+                  }
+                  compact={true}
+                />
+              ) : visualizerMode === 'ai_camera' ? (
+                <PoseCameraFeed
+                  exercise={mappedVisionExercise}
+                  targetReps={
+                    parseInt(
+                      currentExercise.sets[workoutState.currentSetIndex]?.targetReps || '10',
+                      10
+                    ) || 10
+                  }
+                  onRepCompleted={(reps) => {
+                    handleUpdateSetValues(
+                      workoutState.currentExerciseIndex,
+                      workoutState.currentSetIndex,
+                      'actualReps',
+                      reps
+                    )
+                  }}
+                />
+              ) : (
+                <BiomechanicalAnimator
+                  motionKey={currentExercise.motionCycleKey}
+                  exerciseName={currentExercise.name}
+                  isPaused={workoutState.isPaused}
+                />
+              )}
 
               {/* Muscle Groups & Substitution button */}
               <Card className="p-4 bg-zinc-900 border-zinc-800 space-y-3">

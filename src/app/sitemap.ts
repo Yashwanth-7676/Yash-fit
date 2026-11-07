@@ -26,6 +26,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     '/trainer',
     '/workout',
     '/workout-studio',
+    '/motionverse',
+    '/ai-trainer',
     '/training-autopilot',
     '/exercises',
     '/virtual-gym',

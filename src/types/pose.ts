@@ -5,9 +5,23 @@ export interface PoseLandmark {
   visibility?: number
 }
 
-export type SupportedVisionExercise = 'squat' | 'push_up' | 'lunge' | 'plank' | 'bicep_curl' | 'shoulder_press'
+export type SupportedVisionExercise =
+  | 'squat'
+  | 'push_up'
+  | 'lunge'
+  | 'plank'
+  | 'bicep_curl'
+  | 'shoulder_press'
+  | 'deadlift'
+  | 'jumping_jack'
 
-export type MovementPhase = 'READY' | 'ECCENTRIC' | 'BOTTOM_INFLECTION' | 'CONCENTRIC' | 'COMPLETED'
+export type MovementPhase =
+  | 'READY'
+  | 'ECCENTRIC'
+  | 'BOTTOM_INFLECTION'
+  | 'CONCENTRIC'
+  | 'LOCKOUT'
+  | 'COMPLETED'
 
 export type FeedbackSeverity = 'good' | 'warning' | 'error' | 'info'
 
@@ -25,6 +39,17 @@ export interface JointAngles {
   elbowAngle: number // degrees (Shoulder - Elbow - Wrist)
   torsoAngle: number // degrees relative to vertical
   spineAlignmentAngle?: number // degrees (Shoulder - Hip - Ankle)
+  // Bilateral specific angles
+  leftKneeAngle?: number
+  rightKneeAngle?: number
+  leftHipAngle?: number
+  rightHipAngle?: number
+  leftElbowAngle?: number
+  rightElbowAngle?: number
+  leftShoulderAngle?: number
+  rightShoulderAngle?: number
+  bilateralSymmetry?: number // 0 to 100%
+  cadenceRpm?: number // Estimated repetitions per minute cadence
 }
 
 export interface FormAnalysisResult {
@@ -36,6 +61,9 @@ export interface FormAnalysisResult {
   isPartialRep: boolean
   formScore: number // 0 to 100
   isBodyFullyVisible: boolean
+  bilateralSymmetryScore?: number // 0 to 100%
+  primaryFault?: string | null
+  confidence: number // 0 to 1.0 landmark tracking confidence
 }
 
 export interface ExerciseFormConfig {
@@ -49,6 +77,6 @@ export interface ExerciseFormConfig {
     targetDepthAngle: number
     minDepthTolerance: number
     maxLeanAngle?: number
+    hysteresisBuffer?: number
   }
 }
-

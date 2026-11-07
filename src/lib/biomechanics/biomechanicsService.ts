@@ -232,6 +232,75 @@ export const BIOMECHANICS_GUIDANCE_CATALOG: Record<
     approximateNote:
       'Camera must capture both shoulder and ankle to measure full longitudinal spine alignment.',
   },
+  deadlift: {
+    exercise: 'deadlift',
+    name: 'Barbell / Dumbbell Romanian Deadlift',
+    primaryMuscle: 'Hamstrings, Gluteus Maximus & Erector Spinae',
+    targetJoints: ['Hip Joint (Coxofemoral)', 'Knee Joint', 'Thoracolumbar Spine'],
+    planeOfMotion: 'Sagittal',
+    cameraSetup: {
+      recommendedDistance: '6 - 8 feet',
+      recommendedAngle: 'Strict lateral side view (90°)',
+      optimalHeight: 'Waist height',
+    },
+    idealFormCriteria: [
+      'Posterior Hip Hinge: Hips travel backward with soft, unlocked knees (knee angle 120°-145°)',
+      'Flat Spine Line: Straight line from head to sacrum; neutral cervical spine',
+      'Bar Path: Weight stays close to shins and thighs throughout the descent',
+      'Apex Lockout: Full hip extension and glute contraction at top (>165° hip angle)',
+    ],
+    commonFaults: [
+      {
+        fault: 'Lumbar Spine Rounding',
+        cue: 'Pin shoulder blades in back pockets and maintain a proud, rigid chest.',
+        severity: 'high',
+      },
+      {
+        fault: 'Squatting the Deadlift',
+        cue: 'Push hips backward instead of bending knees downwards; feel tension in hamstrings.',
+        severity: 'moderate',
+      },
+      {
+        fault: 'Overextending Lower Back at Lockout',
+        cue: 'Stand tall and squeeze glutes; do not lean backwards at the top.',
+        severity: 'moderate',
+      },
+    ],
+    approximateNote:
+      'Lateral view is essential to properly calculate hip hinge angle and monitor spinal flatness.',
+  },
+  jumping_jack: {
+    exercise: 'jumping_jack',
+    name: 'Dynamic Jumping Jacks',
+    primaryMuscle: 'Calves, Deltoids & Cardiovascular Engine',
+    targetJoints: ['Glenohumeral (Shoulder)', 'Talocrural (Ankle)', 'Hip Abductors'],
+    planeOfMotion: 'Frontal',
+    cameraSetup: {
+      recommendedDistance: '6 - 9 feet',
+      recommendedAngle: 'Front facing camera',
+      optimalHeight: 'Waist to chest height',
+    },
+    idealFormCriteria: [
+      'Overhead Arm Clapping: Arms abduct to full overhead position (>140°)',
+      'Wide Leg Stance: Feet land outside shoulder width with soft knees',
+      'Rhythmic Cadence: Consistent rebound off balls of feet',
+      'Full Return: Arms return to sides and feet touch together between jumps',
+    ],
+    commonFaults: [
+      {
+        fault: 'Half Overhead Range',
+        cue: 'Reach all the way overhead with straight arms on each jump.',
+        severity: 'low',
+      },
+      {
+        fault: 'Heavy Heel Landing',
+        cue: 'Stay light on the balls of your feet with soft knees absorbing the impact.',
+        severity: 'moderate',
+      },
+    ],
+    approximateNote:
+      'Frontal orientation gives clear detection of bilateral arm abduction and foot landing width.',
+  },
 }
 
 /**
